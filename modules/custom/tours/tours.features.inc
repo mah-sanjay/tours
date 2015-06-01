@@ -5,6 +5,21 @@
  */
 
 /**
+ * Implements hook_default_rooms_booking_type().
+ */
+function tours_default_rooms_booking_type() {
+  $items = array();
+  $items['tour_instance'] = entity_import('rooms_booking_type', '{
+    "type" : "tour_instance",
+    "label" : "Tour Instance",
+    "weight" : "0",
+    "data" : "",
+    "rdf_mapping" : []
+  }');
+  return $items;
+}
+
+/**
  * Implements hook_default_rooms_unit_type().
  */
 function tours_default_rooms_unit_type() {
