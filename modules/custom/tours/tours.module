@@ -48,6 +48,41 @@ function tours_form_rooms_unit_edit_form_alter(&$form, &$form_state, $form_id){
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Modifications to tour booking form.
+ */
+function tours_form_rooms_booking_edit_form_alter(&$form, &$form_state) {
+  if ($form['#bundle'] == 'tour_instance') {
+    // Set a default customer if not already present.
+    //
+    // Look for a customer profile for the site admin.
+    $profile_id = db_select('commerce_customer_profile', 'cc')
+      ->fields('cc', array('profile_id'))
+      ->condition('uid', 1)
+      ->range(0,1)
+      ->execute()
+      ->fetchField();
+    if ($profile_id) {
+      $profile = commerce_customer_profile_load($profile_id);
+    }
+    else {
+      // If there's not one already existing, create it.
+      $profile = commerce_customer_profile_new($type = 'billing', $uid = 1);
+      $profile->status = '1';
+      $profile->commerce_customer_address[LANGUAGE_NONE][0]['country'] = 'US';
+      $profile->commerce_customer_address[LANGUAGE_NONE][0]['administrative_area'] = 'NM';
+      $profile->commerce_customer_address[LANGUAGE_NONE][0]['postal_code'] = '87501';
+      $profile->commerce_customer_address[LANGUAGE_NONE][0]['locality'] = 'Santa Fe';
+      $profile->commerce_customer_address[LANGUAGE_NONE][0]['thoroughfare'] = '804 Don Gaspar';
+      $profile->commerce_customer_address[LANGUAGE_NONE][0]['name_line'] = 'Tours Owner';
+      commerce_customer_profile_save($profile);
+    }
+    $form['client']['#default_value'] = $profile->commerce_customer_address[LANGUAGE_NONE][0]['name_line'] . ':' . $profile->profile_id;
+  }
+}
+
+/**
  * Implements hook_menu_alter().
  */
 function tours_menu_alter(&$items) {
