@@ -54,6 +54,9 @@ function tours_form_rooms_unit_edit_form_alter(&$form, &$form_state, $form_id){
  */
 function tours_form_rooms_booking_edit_form_alter(&$form, &$form_state) {
   if ($form['#bundle'] == 'tour_instance') {
+    // Hide 'children' selection.
+    $form['data']['group_size_children']['#access'] = FALSE;
+
     // Set a default customer if not already present.
     //
     // Look for a customer profile for the site admin.
