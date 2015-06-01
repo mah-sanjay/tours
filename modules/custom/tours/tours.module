@@ -1,0 +1,159 @@
+<?php
+
+/**
+ * @file
+ */
+
+include_once 'tours.features.inc';
+
+define ('TOURS_SINGLE_DAY', 'single_day_tour');
+define ('TOURS_SINGLE_DAY_SLOT', 'single_day_tour_slot');
+define ('TOURS_MULTI_DAY', 'multi_day_tour');
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * FORM_ID = rooms_unit_type_form
+ */
+function tours_form_rooms_unit_type_form_alter(&$form, &$form_state, $form_id) {
+  $unit_type = $form_state['rooms_unit_type'];
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * FORM_ID = rooms_unit_edit_form_alter
+ */
+function tours_form_rooms_unit_edit_form_alter(&$form, &$form_state, $form_id){
+
+  $tour_types = array(TOURS_MULTI_DAY, TOURS_SINGLE_DAY, TOURS_SINGLE_DAY_SLOT);
+
+  if (in_array($form['#entity']->type, $tour_types)) {
+    // Change Unit Name to Tour Name.
+    $form['name']['#title'] = t('Tour Name');
+
+    // Base price represents the default price for the tour.
+    $form['base_price']['#title'] = t('Tour Standard Price');
+
+    // Guest capacity is going to stand in for Tour Capacity
+    $form['guest_capacity']['#title'] = t('Tour Capacity');
+    $form['guest_capacity']['max_sleeps']['#description'] =
+      t('The total number of people that can participate in the tour. The minimum
+       number represents the minimum amount required for the tour to take place');
+
+    // Hide chidren and bed arrangement stuff.
+    unset($form['data']['bed_arrangement']);
+    unset($form['child_capacity']);
+  }
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
+function tours_menu_alter(&$items) {
+  $items['admin/rooms/units/unit/%rooms_unit/availability']['page callback'] = 'tours_availability_page';
+}
+
+function tours_entity_info_alter(&$entity_info) {
+  $entity_info['rooms_unit']['inline entity form'] = array(
+    'controller' => 'RoomsUnitInlineEntityFormController',
+  );
+}
+
+/**
+ * Tour availability callback page
+ *
+ * @param \RoomsUnit $rooms_unit
+ * @param string $year
+ * @param string $month
+ * @return array
+ */
+function tours_availability_page(RoomsUnit $rooms_unit, $year = '', $month = '') {
+  if ($rooms_unit->type == TOURS_TYPE) {
+    // Set the page title.
+    drupal_set_title(t('Edit @unit_name Tour Dates', array('@unit_name' => $rooms_unit->name)));
+
+    // Add styles.
+    rooms_availability_modal_style();
+
+    list($url) = explode('/' . $year . '/' . $month, current_path());
+
+    return array(
+      '#theme' => 'rooms_three_month_calendar',
+      '#url' => $url,
+      '#form' => drupal_get_form('update_availability_calendar_form', $rooms_unit->unit_id, $year, $month),
+      '#year' => $year,
+      '#month' => $month,
+      '#attached' => array(
+        'css' => array(
+          drupal_get_path('module', 'rooms_availability') . '/css/rooms_availability.css',
+        ),
+        'js' => array(
+          drupal_get_path('module', 'rooms_availability') . '/js/rooms_availability.js',
+          array(
+            'data' => array('roomsAvailability' => array('roomID' => $rooms_unit->unit_id)),
+            'type' => 'setting',
+          ),
+        ),
+      ),
+    );
+
+  }
+  else {
+    return rooms_availability_page($rooms_unit, $year, $month);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * When an entity of type tour is saved let's make sure that the tour dates
+ * are set as available.
+ *
+ * Implements hook_entity_insert
+ */
+function tours_entity_insert($entity, $type) {
+}
+
+/**
+ * Implements hook_entity_update
+ */
+function tours_entity_update($entity, $type) {
+}
+
+function tours_set_tour_dates($entity) {
+  $start_date = null;
+  $end_date = null;
+
+  // Check whether start and end dates are set.
+  if (isset($entity->field_tour_dates[LANGUAGE_NONE][0]['value'])) {
+    $start_date = new DateTime($entity->field_tour_dates[LANGUAGE_NONE][0]['value']);
+    $end_date = new DateTime($entity->field_tour_dates[LANGUAGE_NONE][0]['value2']);
+  }
+
+  if (!isset($start_date)) {
+    drupal_set_message(t('Tour dates have not been set'));
+    return FALSE;
+  } else {
+    $tour_event = new BookingEvent($entity->unit_id, ROOMS_AVAILABLE, $start_date, $end_date);
+    dpm($tour_event);
+    $events = array($tour_event);
+    $ac = new UnitCalendar($entity->unit_id);
+    $ac->updateCalendar($events);
+  }
+
+
+  dpm($start_date);
+  dpm($end_date);
+  return TRUE;
+  // Get the tour dates from the entity
+  //$start_date = $entity->field_tour_dates[LANGUAGE_NONE]
+}

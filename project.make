@@ -12,14 +12,10 @@ defaults[projects][subdir] = contrib
 ; Platform indicator module.
 projects[platform][version] = 1.3
 
-; Rooms
-projects[rooms][version] = 1.x-dev
-
-; agency_demo make file for d.o. usage
-core = "7.x"
-api = "2"
 
 ; +++++ Modules +++++
+projects[rooms][version] = 1.x-dev
+projects[addressfield][subdir] = "contrib"
 
 projects[addressfield][version] = "1.0"
 projects[addressfield][subdir] = "contrib"
@@ -60,6 +56,9 @@ projects[features][subdir] = "contrib"
 projects[field_group][version] = "1.4"
 projects[field_group][subdir] = "contrib"
 
+projects[inline_entity_form][version] = "1.5"
+projects[inline_entity_form][subdir] = "contrib"
+
 projects[entityreference][version] = "1.1"
 projects[entityreference][subdir] = "contrib"
 
@@ -99,6 +98,9 @@ projects[strongarm][subdir] = "contrib"
 projects[token][version] = "1.5"
 projects[token][subdir] = "contrib"
 
+projects[timefield][version] = "1.x-dev"
+projects[timefield][subdir] = "contrib"
+
 projects[variable][version] = "2.5"
 projects[variable][subdir] = "contrib"
 
@@ -110,6 +112,9 @@ projects[views_bootstrap][subdir] = "contrib"
 
 projects[views_php][version] = "1.0-alpha1"
 projects[views_php][subdir] = "contrib"
+
+project[module_filter][version] = "2.0"
+project[module_filter][subdir] = "contrib"
 
 ; +++++ Themes +++++
 
@@ -153,6 +158,7 @@ libraries[moment][destination] = "libraries"
 libraries[moment][download][type] = "get"
 libraries[moment][download][url] = "http://momentjs.com/downloads/moment.min.js"
 
+; fullcalendar
 libraries[rooms_fullcalendar][download][type] = "file"
 libraries[rooms_fullcalendar][download][url] = "https://github.com/Roomify/fullcalendar/archive/master.zip"
 libraries[rooms_fullcalendar][directory_name] = "rooms_fullcalendar"
@@ -164,3 +170,11 @@ libraries[underscore][type] = "library"
 libraries[underscore][destination] = "libraries"
 libraries[underscore][download][type] = "get"
 libraries[underscore][download][url] = "https://github.com/documentcloud/underscore/archive/1.6.0.zip"
+
+; jquery.timepicker
+libraries[jquery.timepicker][directory_name] = "jquery.timepicker"
+libraries[jquery.timepicker][type] = "library"
+libraries[jquery.timepicker][destination] = "libraries"
+libraries[jquery.timepicker][download][type] = "get"
+libraries[jquery.timepicker][download][url] = "https://fgelinas.com/code/timepicker/releases/jquery-ui-timepicker-0.3.3.zip"
+
