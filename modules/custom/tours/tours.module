@@ -61,7 +61,11 @@ function tours_form_rooms_unit_edit_form_alter(&$form, &$form_state, $form_id){
  */
 function tours_form_rooms_booking_edit_form_alter(&$form, &$form_state) {
   if ($form['#bundle'] == 'tour_instance') {
+    // Allow single day bookings.
+    $form_state['single_day_bookings'] = TRUE;
+
     // Hide 'children' selection.
+    $form['data']['group_size_children']['#access'] = FALSE;
     $form['data']['group_size_children']['#access'] = FALSE;
 
     // Set a default customer if not already present.
@@ -130,6 +134,45 @@ function tours_entity_update($entity, $type) {
  * Implements hook_rooms_price_modifier_alter().
  */
 function tours_rooms_price_modifier_alter(&$price_modifiers, $booking_info) {
+  $tour_types = tours_get_tour_types();
+
+  // If this is a tour, modify the pricing to be per user, for the entire
+  // booking period.
+  if (in_array($booking_info['unit']->type, $tour_types)) {
+
+    $length = $booking_info['end_date']->diff($booking_info['start_date']);
+    $days = $length->days;
+    if ($days != 1) {
+      // If there is more than 1 day for the cruise, adjust the total price to
+      // the base price.
+      $price_modifiers['total'] = array(
+        '#type' => ROOMS_DYNAMIC_MODIFIER,
+        '#op_type' => ROOMS_SUB,
+        '#amount' => $booking_info['unit']->base_price,
+        '#quantity' => ($days - 1),
+      );
+    }
+
+    // Figure out the group size.
+    if (isset($booking_info['booking_parameters'][0]['adults'])) {
+      $group_size = $booking_info['booking_parameters'][0]['adults'];
+    }
+    else {
+      $group_size = $booking_info['booking_parameters']['group_size'];
+    }
+
+    // Add the base price for each additional person.
+    if ($group_size > 1) {
+      $amount_per_additional_person = $booking_info['unit']->base_price;
+      $price_modifiers['additional'] = array(
+        '#type' => ROOMS_DYNAMIC_MODIFIER,
+        '#op_type' => ROOMS_ADD,
+        '#amount' => $amount_per_additional_person,
+        '#quantity' => ($group_size - 1),
+      );
+    }
+
+  }
 }
 
 
