@@ -6,9 +6,17 @@
 
 include_once 'tours.features.inc';
 
+/**
+ * Update the tours_get_tour_types function if modifying the tour types.
+ */
 define ('TOURS_SINGLE_DAY', 'single_day_tour');
 define ('TOURS_SINGLE_DAY_SLOT', 'single_day_tour_slot');
 define ('TOURS_MULTI_DAY', 'multi_day_tour');
+
+
+/**
+ * Drupal hooks.
+ */
 
 /**
  * Implements hook_form_FORM_ID_alter().
@@ -25,8 +33,7 @@ function tours_form_rooms_unit_type_form_alter(&$form, &$form_state, $form_id) {
  * FORM_ID = rooms_unit_edit_form_alter
  */
 function tours_form_rooms_unit_edit_form_alter(&$form, &$form_state, $form_id){
-
-  $tour_types = array(TOURS_MULTI_DAY, TOURS_SINGLE_DAY, TOURS_SINGLE_DAY_SLOT);
+  $tour_types = tours_get_tour_types();
 
   if (in_array($form['#entity']->type, $tour_types)) {
     // Change Unit Name to Tour Name.
@@ -99,6 +106,70 @@ function tours_entity_info_alter(&$entity_info) {
 }
 
 /**
+ * When an entity of type tour is saved let's make sure that the tour dates
+ * are set as available.
+ *
+ * Implements hook_entity_insert
+ */
+function tours_entity_insert($entity, $type) {
+}
+
+/**
+ * Implements hook_entity_update
+ */
+function tours_entity_update($entity, $type) {
+}
+
+
+
+/**
+ * Rooms hooks.
+ */
+
+/**
+ * Implements hook_rooms_price_modifier_alter().
+ */
+function tours_rooms_price_modifier_alter(&$price_modifiers, $booking_info) {
+}
+
+
+/**
+ * Custom functions.
+ */
+
+/**
+ *
+ */
+function tours_set_tour_dates($entity) {
+  $start_date = null;
+  $end_date = null;
+
+  // Check whether start and end dates are set.
+  if (isset($entity->field_tour_dates[LANGUAGE_NONE][0]['value'])) {
+    $start_date = new DateTime($entity->field_tour_dates[LANGUAGE_NONE][0]['value']);
+    $end_date = new DateTime($entity->field_tour_dates[LANGUAGE_NONE][0]['value2']);
+  }
+
+  if (!isset($start_date)) {
+    drupal_set_message(t('Tour dates have not been set'));
+    return FALSE;
+  } else {
+    $tour_event = new BookingEvent($entity->unit_id, ROOMS_AVAILABLE, $start_date, $end_date);
+    dpm($tour_event);
+    $events = array($tour_event);
+    $ac = new UnitCalendar($entity->unit_id);
+    $ac->updateCalendar($events);
+  }
+
+
+  dpm($start_date);
+  dpm($end_date);
+  return TRUE;
+  // Get the tour dates from the entity
+  //$start_date = $entity->field_tour_dates[LANGUAGE_NONE]
+}
+
+/**
  * Tour availability callback page
  *
  * @param \RoomsUnit $rooms_unit
@@ -142,56 +213,9 @@ function tours_availability_page(RoomsUnit $rooms_unit, $year = '', $month = '')
   }
 }
 
-
-
-
-
-
-
-
-
-
-
 /**
- * When an entity of type tour is saved let's make sure that the tour dates
- * are set as available.
- *
- * Implements hook_entity_insert
+ * Return all tour types.
  */
-function tours_entity_insert($entity, $type) {
-}
-
-/**
- * Implements hook_entity_update
- */
-function tours_entity_update($entity, $type) {
-}
-
-function tours_set_tour_dates($entity) {
-  $start_date = null;
-  $end_date = null;
-
-  // Check whether start and end dates are set.
-  if (isset($entity->field_tour_dates[LANGUAGE_NONE][0]['value'])) {
-    $start_date = new DateTime($entity->field_tour_dates[LANGUAGE_NONE][0]['value']);
-    $end_date = new DateTime($entity->field_tour_dates[LANGUAGE_NONE][0]['value2']);
-  }
-
-  if (!isset($start_date)) {
-    drupal_set_message(t('Tour dates have not been set'));
-    return FALSE;
-  } else {
-    $tour_event = new BookingEvent($entity->unit_id, ROOMS_AVAILABLE, $start_date, $end_date);
-    dpm($tour_event);
-    $events = array($tour_event);
-    $ac = new UnitCalendar($entity->unit_id);
-    $ac->updateCalendar($events);
-  }
-
-
-  dpm($start_date);
-  dpm($end_date);
-  return TRUE;
-  // Get the tour dates from the entity
-  //$start_date = $entity->field_tour_dates[LANGUAGE_NONE]
+function tours_get_tour_types() {
+  return array(TOURS_MULTI_DAY, TOURS_SINGLE_DAY, TOURS_SINGLE_DAY_SLOT);
 }
