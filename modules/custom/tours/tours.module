@@ -153,11 +153,14 @@ function tours_rooms_price_modifier_alter(&$price_modifiers, $booking_info) {
     }
 
     // Figure out the group size.
-    if (isset($booking_info['booking_parameters'][0]['adults'])) {
+    if (isset($booking_info['booking_parameters']['group_size'])) {
+      $group_size = $booking_info['booking_parameters']['group_size'];
+    }
+    elseif (isset($booking_info['booking_parameters'][0]['adults'])) {
       $group_size = $booking_info['booking_parameters'][0]['adults'];
     }
     else {
-      $group_size = $booking_info['booking_parameters']['group_size'];
+      $group_size = $booking_info['booking_parameters']['adults'];
     }
 
     // Add the base price for each additional person.
