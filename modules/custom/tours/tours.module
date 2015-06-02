@@ -139,12 +139,11 @@ function tours_rooms_price_modifier_alter(&$price_modifiers, $booking_info) {
   // If this is a tour, modify the pricing to be per user, for the entire
   // booking period.
   if (in_array($booking_info['unit']->type, $tour_types)) {
-
     $length = $booking_info['end_date']->diff($booking_info['start_date']);
     $days = $length->days;
-    if ($days != 1) {
-      // If there is more than 1 day for the cruise, adjust the total price to
-      // the base price.
+    if ($days > 1) {
+      // If the tour is more than 1 day long, adjust the
+      // total price to the base price.
       $price_modifiers['total'] = array(
         '#type' => ROOMS_DYNAMIC_MODIFIER,
         '#op_type' => ROOMS_SUB,
@@ -171,7 +170,6 @@ function tours_rooms_price_modifier_alter(&$price_modifiers, $booking_info) {
         '#quantity' => ($group_size - 1),
       );
     }
-
   }
 }
 
