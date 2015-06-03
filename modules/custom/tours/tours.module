@@ -55,6 +55,181 @@ function tours_form_rooms_unit_edit_form_alter(&$form, &$form_state, $form_id){
 }
 
 /**
+ * Implements hook_form_FORMID_alter().
+ *
+ * Override the availability form to make sense for tours.
+ */
+function tours_form_update_availability_calendar_form_alter(&$form, &$form_state, $form_id) {
+  $unit = rooms_unit_load($form['rooms_update_availability']['unit_id']['#value']);
+  $tour_types = tours_get_tour_types();
+  if (in_array($unit->type, $tour_types)) {
+    unset($form['#validate']);
+    $form['rooms_update_availability']['actions']['submit']['#value'] = t('Add Instances');
+    $form['rooms_update_availability']['actions']['submit']['#submit'][0] = 'tours_add_instances_form_submit';
+    $form['rooms_update_availability']['#description'] = t('Enter tour dates/times.');
+    unset($form['rooms_update_availability']['rooms_date_range']);
+    unset($form['rooms_update_availability']['unit_state']);
+    $form['rooms_update_availability']['date'] = array(
+      '#type' => 'date_popup',
+      '#required' => TRUE,
+      '#date_timezone' => date_default_timezone(),
+      '#date_increment' => 2,
+      '#date_format' => 'Y-m-d H:i',
+      '#date_year_range' => '-0:+1',
+      '#date_type' => DATE_DATETIME,
+      '#title' => t('Starting date'),
+      '#default_value' => '',
+      '#required' => TRUE,
+      '#element_validate' => array(
+        'date_repeat_field_widget_validate',
+      ),
+      '#field_name' => 'field_not_really_a_field',
+      '#field_parents' => array('dates'),
+      '#entity_type' => 'booking',
+      '#bundle' => 'tour_instance',
+      '#date_is_default' => TRUE,
+      '#language' => LANGUAGE_NONE,
+    );
+    $form['rooms_update_availability']['end_date'] = array(
+      '#type' => 'date_popup',
+      '#required' => TRUE,
+      '#date_timezone' => date_default_timezone(),
+      '#date_increment' => 2,
+      '#date_format' => 'Y-m-d H:i',
+      '#date_year_range' => '-0:+1',
+      '#date_type' => DATE_DATETIME,
+      '#title' => t('End date'),
+      '#default_value' => '',
+      '#required' => TRUE,
+      '#element_validate' => array(
+        'date_repeat_field_widget_validate',
+      ),
+      '#field_name' => 'field_not_really_a_field',
+      '#field_parents' => array('dates'),
+      '#entity_type' => 'booking',
+      '#bundle' => 'tour_instance',
+      '#date_is_default' => TRUE,
+      '#language' => LANGUAGE_NONE,
+    );
+    $form['rooms_update_availability']['date']['show_repeat_settings'] = array(
+      '#type' => 'hidden',
+      '#value' => 1,
+    );
+    $form['rooms_update_availability']['parent1'] = array(
+      '#tree' => TRUE,
+      'parent2' => array(
+        '#tree' => TRUE,
+        '#required' => TRUE,
+        'rrule' => array(
+          '#type' => 'date_repeat_rrule',
+          '#theme_wrappers' => array('date_repeat_rrule'),
+          '#default_value' => isset($instance->repeat_rule) ? $instance->repeat_rule : '',
+          '#date_timezone' => date_default_timezone(),
+          '#date_label_position' => 'above',
+          '#date_format' => 'm/d/Y - H:i',
+          '#date_increment' => 1,
+          // '#weight' => -9,
+          '#date_year_range' => '-0:+1',
+          // '#date_repeat_widget' => 'date_popup_repeat',
+          '#date_repeat_widget' => 'date_popup',
+          '#date_flexible' => 0,
+          '#date_repeat_collapsed' => TRUE,
+        ),
+      ),
+    );
+  }
+}
+
+/**
+ * Validation for tour instance repeating date add form.
+ */
+function tours_add_instances_form_submit($form, &$form_state) {
+  global $user;
+
+  // Set up variables.
+  $rrule = $form_state['values']['parent1']['parent2']['rrule'];
+  $rrule_values = date_ical_parse_rrule(NULL, $rrule);
+  $timezone = date_default_timezone();
+  $format = 'Y-m-d H:i';
+  $start_date = $form_state['values']['date'];
+  $end_date = $form_state['values']['end_date'];
+
+  // Calculate the event duration.
+  $start = new DateObject($start_date, $timezone, $format);
+  $end = new DateObject($end_date, $timezone, $format);
+  $duration = $start->difference($end);
+
+  // Figure out when to stop.
+  $start_datetime = date_format($start, DATE_FORMAT_DATETIME);
+  if (!empty($rrule_values['UNTIL']['datetime'])) {
+    $end = date_ical_date($rrule_values['UNTIL'], $timezone);
+    $end_datetime = date_format($end, DATE_FORMAT_DATETIME);
+  }
+  elseif (!empty($rrule_values['COUNT'])) {
+    $end_datetime = NULL;
+  }
+
+  // Split the RRULE into RRULE, EXDATE, and RDATE parts.
+  $parts = date_repeat_split_rrule($rrule);
+  $parsed_exceptions = (array) $parts[1];
+  $exceptions = array();
+  foreach ($parsed_exceptions as $exception) {
+    $date = date_ical_date($exception, $timezone);
+    $exceptions[] = date_format($date, 'Y-m-d');
+  }
+
+  $parsed_rdates = (array) $parts[2];
+  $additions = array();
+  foreach ($parsed_rdates as $rdate) {
+    $date = date_ical_date($rdate, $timezone);
+    $additions[] = date_format($date, 'Y-m-d');
+  }
+
+  // Calculate the dates for bookings we want to add.
+  $dates = date_repeat_calc($rrule, $start_datetime, $end_datetime, $exceptions, $timezone, $additions);
+  $value = array();
+  foreach ($dates as $delta => $date) {
+    // date_repeat_calc always returns DATE_DATETIME dates, which is
+    // not necessarily $field['type'] dates.
+    // Convert returned dates back to db timezone before storing.
+    $date_start = new DateObject($date, $timezone, DATE_FORMAT_DATETIME);
+    $date_end = clone($date_start);
+    date_modify($date_end, '+' . $duration . ' seconds');
+    $value[$delta] = array(
+      'value' => date_format($date_start, $format),
+      'value2' => date_format($date_end, $format),
+      'offset' => date_offset_get($date_start),
+      'offset2' => date_offset_get($date_end),
+      'timezone' => $timezone,
+      'rrule' => $rrule,
+      );
+  }
+
+  // Add the tour instance bookings.
+  $unit = rooms_unit_load($form_state['values']['unit_id']);
+  foreach ($value as $instance) {
+    $profile = tours_get_default_customer_profile();
+
+    $params = array(
+      'unit_id' => $unit->unit_id,
+      'unit_type' => $unit->type,
+      'uid' => $user->uid,
+      'customer_id' => $profile->uid,
+      'name' => $profile->commerce_customer_address[LANGUAGE_NONE][0]['name_line'],
+      'type' => 'tour_instance',
+      'created' => time(),
+      'changed' => time(),
+      'language' => LANGUAGE_NONE,
+      'start_date' => $instance['value'],
+      'end_date' => $instance['value2'],
+      'data' => array('group_size' => 0),
+    );
+    $booking = rooms_booking_create($params);
+    rooms_booking_save($booking);
+  }
+}
+
+/**
  * Implements hook_form_FORM_ID_alter().
  *
  * Modifications to tour booking form.
@@ -68,30 +243,7 @@ function tours_form_rooms_booking_edit_form_alter(&$form, &$form_state) {
     $form['data']['group_size_children']['#access'] = FALSE;
     $form['data']['group_size_children']['#access'] = FALSE;
 
-    // Set a default customer if not already present.
-    //
-    // Look for a customer profile for the site admin.
-    $profile_id = db_select('commerce_customer_profile', 'cc')
-      ->fields('cc', array('profile_id'))
-      ->condition('uid', 1)
-      ->range(0,1)
-      ->execute()
-      ->fetchField();
-    if ($profile_id) {
-      $profile = commerce_customer_profile_load($profile_id);
-    }
-    else {
-      // If there's not one already existing, create it.
-      $profile = commerce_customer_profile_new($type = 'billing', $uid = 1);
-      $profile->status = '1';
-      $profile->commerce_customer_address[LANGUAGE_NONE][0]['country'] = 'US';
-      $profile->commerce_customer_address[LANGUAGE_NONE][0]['administrative_area'] = 'NM';
-      $profile->commerce_customer_address[LANGUAGE_NONE][0]['postal_code'] = '87501';
-      $profile->commerce_customer_address[LANGUAGE_NONE][0]['locality'] = 'Santa Fe';
-      $profile->commerce_customer_address[LANGUAGE_NONE][0]['thoroughfare'] = '804 Don Gaspar';
-      $profile->commerce_customer_address[LANGUAGE_NONE][0]['name_line'] = 'Tours Owner';
-      commerce_customer_profile_save($profile);
-    }
+    $profile = tours_get_default_customer_profile;
     $form['client']['#default_value'] = $profile->commerce_customer_address[LANGUAGE_NONE][0]['name_line'] . ':' . $profile->profile_id;
   }
 }
@@ -180,6 +332,36 @@ function tours_rooms_price_modifier_alter(&$price_modifiers, $booking_info) {
 /**
  * Custom functions.
  */
+
+
+/**
+ * Set a default customer if not already present.
+ */
+function tours_get_default_customer_profile() {
+  // Look for a customer profile for the site admin.
+  $profile_id = db_select('commerce_customer_profile', 'cc')
+    ->fields('cc', array('profile_id'))
+    ->condition('uid', 1)
+    ->range(0,1)
+    ->execute()
+    ->fetchField();
+  if ($profile_id) {
+    $profile = commerce_customer_profile_load($profile_id);
+  }
+  else {
+    // If there's not one already existing, create it.
+    $profile = commerce_customer_profile_new($type = 'billing', $uid = 1);
+    $profile->status = '1';
+    $profile->commerce_customer_address[LANGUAGE_NONE][0]['country'] = 'US';
+    $profile->commerce_customer_address[LANGUAGE_NONE][0]['administrative_area'] = 'NM';
+    $profile->commerce_customer_address[LANGUAGE_NONE][0]['postal_code'] = '87501';
+    $profile->commerce_customer_address[LANGUAGE_NONE][0]['locality'] = 'Santa Fe';
+    $profile->commerce_customer_address[LANGUAGE_NONE][0]['thoroughfare'] = '804 Don Gaspar';
+    $profile->commerce_customer_address[LANGUAGE_NONE][0]['name_line'] = 'Tours Owner';
+    commerce_customer_profile_save($profile);
+  }
+  return($profile);
+}
 
 /**
  *
