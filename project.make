@@ -3,7 +3,7 @@ core = 7.x
 
 ; Drupal core.
 projects[drupal][type] = core
-projects[drupal][version] = 7.35
+projects[drupal][version] = 7.36
 projects[drupal][patch][] = "https://drupal.org/files/issues/install-redirect-on-empty-database-728702-36.patch"
 
 ; Drush make allows a default sub directory for all contributed projects.
@@ -14,8 +14,11 @@ projects[platform][version] = 1.3
 
 
 ; +++++ Modules +++++
-projects[rooms][version] = 1.x-dev
-projects[addressfield][subdir] = "contrib"
+projects[rooms][type] = module
+projects[rooms][download][type] = "git"
+projects[rooms][download][url] = "git://github.com/Roomify/rooms.git"
+projects[rooms][directory_name] = "rooms"
+projects[rooms][subdir] = "contrib"
 
 projects[addressfield][version] = "1.0"
 projects[addressfield][subdir] = "contrib"
