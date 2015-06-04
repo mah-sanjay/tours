@@ -243,7 +243,7 @@ function tours_form_rooms_booking_edit_form_alter(&$form, &$form_state) {
     $form['data']['group_size_children']['#access'] = FALSE;
     $form['data']['group_size_children']['#access'] = FALSE;
 
-    $profile = tours_get_default_customer_profile;
+    $profile = tours_get_default_customer_profile();
     $form['client']['#default_value'] = $profile->commerce_customer_address[LANGUAGE_NONE][0]['name_line'] . ':' . $profile->profile_id;
   }
 }
