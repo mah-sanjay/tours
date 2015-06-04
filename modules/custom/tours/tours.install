@@ -35,3 +35,15 @@ function tours_enable() {
   }
 }
 
+/**
+ * Implements hook_uninstall().
+ */
+function tours_uninstall() {
+  // Delete line item fields.
+  module_load_include('inc', 'tours', 'includes/tours.fields');
+  $field_data = _tours_line_item_type_fields();
+  foreach ($field_data['fields'] as $field_name => $field_info) {
+    field_delete_field($field_name);
+  }
+  field_purge_batch(20);
+}

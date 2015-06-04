@@ -279,6 +279,65 @@ function tours_entity_update($entity, $type) {
 
 
 /**
+ * Commerce hooks.
+ */
+
+/**
+ * Implements hook_commerce_line_item_type_info().
+ */
+function tours_commerce_line_item_type_info() {
+  return array(
+    'tours_booking' => array(
+      'name' => t('Tours Booking'),
+      'description' => t('Represents a booking of a Rooms Tour product.'),
+      'product' => TRUE,
+      'add_form_submit_value' => t('Add product'),
+      'base' => 'tours_line_item',
+    ),
+  );
+}
+
+/**
+ * Ensures the booking line item type contains a product reference field and
+ * all other rooms fields required for a booking.
+ *
+ * @param array $line_item_type
+ *   The line item type object.
+ */
+function tours_line_item_configuration($line_item_type) {
+  $type = $line_item_type['type'];
+
+  // Get the info about the fields and instances we need to create.
+  module_load_include('inc', 'tours', 'includes/tours.fields');
+  $field_data = _tours_line_item_type_fields();
+
+  // Create the product reference field for the line item type.
+  commerce_product_line_item_configuration($line_item_type);
+
+  // For each field, check whether it already exists create it if it doesn't
+  foreach ($field_data['fields'] as $field_name => $field_info) {
+    $field = field_info_field($field_name);
+    $instance = field_info_instance('commerce_line_item', $field_name, $type);
+
+    if (empty($field)) {
+      field_create_field($field_data['fields'][$field_name]);
+    }
+    if (empty($instance)) {
+      field_create_instance($field_data['instances'][$field_name]);
+    }
+  }
+}
+
+/**
+ * Implements hook_line_item_title().
+ */
+function tours_line_item_title($line_item) {
+  // Use the line item's label for the title.
+  return ($line_item->line_item_label);
+}
+
+
+/**
  * Rooms hooks.
  */
 
