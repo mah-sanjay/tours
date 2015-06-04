@@ -28,6 +28,7 @@ features[rooms_booking_type][] = tour_instance
 features[rooms_unit_type][] = multi_day_tour
 features[rooms_unit_type][] = single_day_tour
 features[rooms_unit_type][] = single_day_tour_slot
+features[views_view][] = upcoming_tours
 features[views_view][] = upcoming_tours_by_unit
 features_exclude[dependencies][ctools] = ctools
 files[] = includes/rooms_unit.inline_entity_form.inc

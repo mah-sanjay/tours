@@ -276,6 +276,14 @@ function tours_entity_insert($entity, $type) {
 function tours_entity_update($entity, $type) {
 }
 
+/**
+ * Implements hook_views_default_views_alter().
+ */
+function tours_views_default_views_alter(&$views) {
+  if (isset($views['bookings'])) {
+    $views['bookings']->disabled = TRUE;
+  }
+}
 
 
 /**
