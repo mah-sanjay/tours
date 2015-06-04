@@ -73,5 +73,50 @@ function tours_field_default_field_bases() {
     'type' => 'timefield',
   );
 
+  // Exported field_base: 'field_tour_orders'
+  $field_bases['field_tour_orders'] = array(
+    'active' => 1,
+    'cardinality' => -1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_tour_orders',
+    'foreign keys' => array(
+      'commerce_order' => array(
+        'columns' => array(
+          'target_id' => 'order_id',
+        ),
+        'table' => 'commerce_order',
+      ),
+    ),
+    'indexes' => array(
+      'target_id' => array(
+        0 => 'target_id',
+      ),
+    ),
+    'locked' => 0,
+    'module' => 'entityreference',
+    'settings' => array(
+      'handler' => 'base',
+      'handler_settings' => array(
+        'behaviors' => array(
+          'views-select-list' => array(
+            'status' => 0,
+          ),
+        ),
+        'sort' => array(
+          'direction' => 'ASC',
+          'property' => 'created',
+          'type' => 'property',
+        ),
+        'target_bundles' => array(
+          'commerce_order' => 'commerce_order',
+        ),
+      ),
+      'target_type' => 'commerce_order',
+    ),
+    'translatable' => 0,
+    'type' => 'entityreference',
+  );
+
   return $field_bases;
 }

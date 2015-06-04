@@ -10,6 +10,43 @@
 function tours_field_default_field_instances() {
   $field_instances = array();
 
+  // Exported field_instance: 'rooms_booking-tour_instance-field_tour_orders'
+  $field_instances['rooms_booking-tour_instance-field_tour_orders'] = array(
+    'bundle' => 'tour_instance',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'entityreference',
+        'settings' => array(
+          'link' => FALSE,
+        ),
+        'type' => 'entityreference_label',
+        'weight' => 0,
+      ),
+    ),
+    'entity_type' => 'rooms_booking',
+    'field_name' => 'field_tour_orders',
+    'label' => 'Tour Orders',
+    'required' => 0,
+    'settings' => array(
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'entityreference',
+      'settings' => array(
+        'match_operator' => 'CONTAINS',
+        'path' => '',
+        'size' => 60,
+      ),
+      'type' => 'entityreference_autocomplete',
+      'weight' => 1,
+    ),
+  );
+
   // Exported field_instance: 'rooms_unit-multi_day_tour-rooms_booking_unit_options'
   $field_instances['rooms_unit-multi_day_tour-rooms_booking_unit_options'] = array(
     'bundle' => 'multi_day_tour',
@@ -235,6 +272,7 @@ function tours_field_default_field_instances() {
   t('Daily Slot');
   t('Day Tour Time Slot');
   t('Options');
+  t('Tour Orders');
 
   return $field_instances;
 }
