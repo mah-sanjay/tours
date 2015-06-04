@@ -1,13 +1,13 @@
 <?php
 /**
  * @file
- * rooms_faceted_search.features.inc
+ * tours_faceted_search.features.inc
  */
 
 /**
  * Implements hook_ctools_plugin_api().
  */
-function rooms_faceted_search_ctools_plugin_api($module = NULL, $api = NULL) {
+function tours_faceted_search_ctools_plugin_api($module = NULL, $api = NULL) {
   if ($module == "facetapi" && $api == "facetapi_defaults") {
     return array("version" => "1");
   }
@@ -16,14 +16,14 @@ function rooms_faceted_search_ctools_plugin_api($module = NULL, $api = NULL) {
 /**
  * Implements hook_views_api().
  */
-function rooms_faceted_search_views_api($module = NULL, $api = NULL) {
+function tours_faceted_search_views_api($module = NULL, $api = NULL) {
   return array("api" => "3.0");
 }
 
 /**
  * Implements hook_default_rooms_unit_type().
  */
-function rooms_faceted_search_default_rooms_unit_type() {
+function tours_faceted_search_default_rooms_unit_type() {
   $items = array();
   $items['unit_with_attributes'] = entity_import('rooms_unit_type', '{
     "type" : "unit_with_attributes",
@@ -46,7 +46,7 @@ function rooms_faceted_search_default_rooms_unit_type() {
 /**
  * Implements hook_default_search_api_index().
  */
-function rooms_faceted_search_default_search_api_index() {
+function tours_faceted_search_default_search_api_index() {
   $items = array();
   $items['default_unit_index'] = entity_import('search_api_index', '{
     "name" : "Default unit index",
@@ -142,7 +142,7 @@ function rooms_faceted_search_default_search_api_index() {
 /**
  * Implements hook_default_search_api_server().
  */
-function rooms_faceted_search_default_search_api_server() {
+function tours_faceted_search_default_search_api_server() {
   $items = array();
   $items['db'] = entity_import('search_api_server', '{
     "name" : "DB",

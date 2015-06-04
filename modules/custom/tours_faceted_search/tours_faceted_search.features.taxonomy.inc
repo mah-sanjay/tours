@@ -1,13 +1,13 @@
 <?php
 /**
  * @file
- * rooms_faceted_search.features.taxonomy.inc
+ * tours_faceted_search.features.taxonomy.inc
  */
 
 /**
  * Implements hook_taxonomy_default_vocabularies().
  */
-function rooms_faceted_search_taxonomy_default_vocabularies() {
+function tours_faceted_search_taxonomy_default_vocabularies() {
   return array(
     'attributes' => array(
       'name' => 'Attributes',

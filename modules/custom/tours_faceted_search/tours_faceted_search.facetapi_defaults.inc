@@ -1,13 +1,13 @@
 <?php
 /**
  * @file
- * rooms_faceted_search.facetapi_defaults.inc
+ * tours_faceted_search.facetapi_defaults.inc
  */
 
 /**
  * Implements hook_facetapi_default_facet_settings().
  */
-function rooms_faceted_search_facetapi_default_facet_settings() {
+function tours_faceted_search_facetapi_default_facet_settings() {
   $export = array();
 
   $facet = new stdClass();

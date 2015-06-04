@@ -1,13 +1,13 @@
 <?php
 /**
  * @file
- * rooms_faceted_search.features.field_instance.inc
+ * tours_faceted_search.features.field_instance.inc
  */
 
 /**
  * Implements hook_field_default_field_instances().
  */
-function rooms_faceted_search_field_default_field_instances() {
+function tours_faceted_search_field_default_field_instances() {
   $field_instances = array();
 
   // Exported field_instance: 'rooms_unit-unit_with_attributes-field_attributes'

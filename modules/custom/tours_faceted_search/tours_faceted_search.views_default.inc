@@ -1,13 +1,13 @@
 <?php
 /**
  * @file
- * rooms_faceted_search.views_default.inc
+ * tours_faceted_search.views_default.inc
  */
 
 /**
  * Implements hook_views_default_views().
  */
-function rooms_faceted_search_views_default_views() {
+function tours_faceted_search_views_default_views() {
   $export = array();
 
   $view = new view();
