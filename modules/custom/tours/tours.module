@@ -441,7 +441,13 @@ function tours_availability_page(RoomsUnit $rooms_unit, $year = '', $month = '')
 
 /**
  * Return all tour types.
+ * @param boolean $all
  */
-function tours_get_tour_types() {
-  return array(TOURS_MULTI_DAY, TOURS_SINGLE_DAY, TOURS_SINGLE_DAY_SLOT);
+function tours_get_tour_types($all = FALSE) {
+  // Typically we are interested in the multi_day + single day tours, not the single day slots
+  if ($all) {
+    return array(TOURS_MULTI_DAY, TOURS_SINGLE_DAY, TOURS_SINGLE_DAY_SLOT);
+  } else {
+    return array(TOURS_MULTI_DAY, TOURS_SINGLE_DAY);
+  }
 }

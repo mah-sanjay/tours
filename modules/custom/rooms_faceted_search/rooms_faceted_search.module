@@ -81,7 +81,11 @@ function rooms_faceted_search_search_api_query_alter($query) {
         if (isset($params['group_size'])) {
           $options[] = array('adults' => $params['group_size']);
         }
-        $agent = new AvailabilityAgent($arrivalDateTime, $departureDateTime, $options);
+
+        $agent = new AvailabilityAgent($arrivalDateTime, $departureDateTime,
+          $options, 1, array(ROOMS_AVAILABLE, ROOMS_ON_REQUEST, ROOMS_UNCONFIRMED_BOOKINGS),
+          tours_get_tour_types(),
+          TRUE);
         $units = $agent->checkAvailability();
         dpm($units);
 
