@@ -71,11 +71,9 @@ function tours_faceted_search_search_api_query_alter($query) {
 
       // See if we have dates to search.
       if (isset($params['rooms_start_date']['date']) &&
-          !empty($params['rooms_start_date']['date']) &&
-          isset($params['rooms_end_date']['date']) &&
-          !empty($params['rooms_end_date']['date'])) {
+          !empty($params['rooms_start_date']['date'])) {
         $arrivalDateTime = DateTime::createFromFormat('d/m/Y', $params['rooms_start_date']['date']);
-        $departureDateTime = DateTime::createFromFormat('d/m/Y', $params['rooms_end_date']['date']);
+        $departureDateTime = $arrivalDateTime->add(new DateInterval('P30D'));
 
         $options = array();
         if (isset($params['group_size'])) {
@@ -154,9 +152,7 @@ function tours_faceted_search_rooms_availability_search_form() {
   if (isset($params['rooms_start_date']['date']) && !empty($params['rooms_start_date']['date'])) {
     $arrivalDateTime = DateTime::createFromFormat('d/m/Y', $params['rooms_start_date']['date']);
     $arrival = $arrivalDateTime->format('Y-m-d');
-  }
-  if (isset($params['rooms_end_date']['date']) && !empty($params['rooms_end_date']['date'])) {
-    $departureDateTime = DateTime::createFromFormat('d/m/Y', $params['rooms_end_date']['date']);
+    $departureDateTime = $arrivalDateTime->add(new DateInterval('P30D'));
     $departure = $departureDateTime->format('Y-m-d');
   }
 
@@ -185,42 +181,6 @@ function tours_faceted_search_rooms_availability_search_form() {
     '#attributes' => array('placeholder' => t('arrival')),
     '#default_value' => isset($arrival) ? $arrival : '',
     '#datepicker_options' => array_merge($datepicker_options, array('endDateSelector' => $end_date_selector)),
-  );
-
-  $form['container']['departure'] = array(
-    '#prefix' => '<div class="end-date" id="' . $end_date_id . '">',
-    '#suffix' => '</div></div>',
-    '#type' => 'date_popup',
-    '#description' => '',
-    '#date_format' => variable_get('rooms_date_format', 'd-m-Y'),
-    '#attributes' => array('placeholder' => t('departure')),
-    '#default_value' => isset($departure) ? $departure : '',
-    '#datepicker_options' => array_merge($datepicker_options, array('startDateSelector' => $start_date_selector)),
-    '#attached' => array(
-      'js' => array(
-        drupal_get_path('module', 'rooms') . '/js/rooms_date_popup.js',
-        array(
-          'data' => array(
-            'rooms' => array(
-              // 'roomsStartYear' => $year,
-              // 'roomsStartMonth' => $month,
-              'roomsBookingStartDay' => variable_get('rooms_booking_start_date', 1),
-              'roomsDateFormat' => 'dd/mm/yy',
-
-              // Here we create a listing of all datepickers registered on the
-              // current page. This is available for use in your own custom
-              // jQuery scripts as Drupal.settings.rooms.datepickers.
-              'datepickers' => array(
-                $start_date_selector => array(
-                  'endDateSelector' => $end_date_selector,
-                ),
-              ),
-            ),
-          ),
-          'type' => 'setting',
-        ),
-      ),
-    ),
   );
 
   $group_options = array(1 => t('1 guest'));
@@ -254,11 +214,7 @@ function tours_faceted_search_rooms_availability_search_form() {
  * @param $form_state
  */
 function tours_faceted_search_rooms_availability_search_form_validate($form, $form_state) {
-  // Don't allow users to only enter one date.
-  if (isset($form_state['values']['arrival']) && !isset($form_state['values']['departure'])) {
-    form_set_error('departure', t('Please enter a departure date.'));
-  }
-  elseif (!isset($form_state['values']['arrival']) && isset($form_state['values']['departure'])) {
+  if (!isset($form_state['values']['arrival'])) {
     form_set_error('arrival', t('Please enter an arrival date.'));
   }
 }
@@ -281,10 +237,8 @@ function tours_faceted_search_rooms_availability_search_form_submit($form, $form
   if (isset($form_state['values']['arrival']) && !empty($form_state['values']['arrival'])) {
     $arrivalDateTime = DateTime::createFromFormat('Y-m-d', $form_state['values']['arrival']);
     $arrival = $arrivalDateTime->format($format);
-  }
-  if (isset($form_state['values']['departure']) && !empty($form_state['values']['departure'])) {
-    $departureDateTime = DateTime::createFromFormat('Y-m-d', $form_state['values']['departure']);
-    $departure = $departureDateTime->format($format);
+    $departureDateTime = $arrivalDateTime->add(new DateInterval('P30D'));
+    $departure = $departureDateTime->format('Y-m-d');
   }
 
   // Set the URL parameters for the view.
