@@ -471,7 +471,7 @@ function tours_set_tour_dates($entity) {
  * @return array
  */
 function tours_availability_page(RoomsUnit $rooms_unit, $year = '', $month = '') {
-  if ($rooms_unit->type == TOURS_TYPE) {
+  if (in_array($rooms_unit->type, tours_get_tour_types(TRUE))) {
     // Set the page title.
     drupal_set_title(t('Edit @unit_name Tour Dates', array('@unit_name' => $rooms_unit->name)));
 
