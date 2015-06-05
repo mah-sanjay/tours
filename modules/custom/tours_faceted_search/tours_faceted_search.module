@@ -72,7 +72,6 @@ function tours_faceted_search_search_api_query_alter($query) {
       // See if we have dates to search.
       if (isset($params['rooms_start_date']['date']) &&
           !empty($params['rooms_start_date']['date'])) {
-        dpm($params['rooms_start_date']['date']);
         $arrivalDateTime = DateTime::createFromFormat('d/m/Y', $params['rooms_start_date']['date']);
         $departureDateTime = clone $arrivalDateTime;
         $departureDateTime->add(new DateInterval('P30D'));
@@ -82,7 +81,7 @@ function tours_faceted_search_search_api_query_alter($query) {
           $options[] = array('adults' => $params['group_size']);
         }
         $agent = new AvailabilityAgent($arrivalDateTime, $departureDateTime,
-          $options, 1, array(ROOMS_AVAILABLE, ROOMS_ON_REQUEST, ROOMS_UNCONFIRMED_BOOKINGS),
+          $options, 1, array(ROOMS_AVAILABLE, ROOMS_ON_REQUEST, ROOMS_NOT_AVAILABLE),
           tours_get_tour_types(),
           TRUE);
         $units = $agent->checkAvailability();
@@ -99,7 +98,6 @@ function tours_faceted_search_search_api_query_alter($query) {
           foreach ($units_per_type as $units) {
             foreach ($units as $id => $unit) {
               $ids[] = $id;
-              dpm($ids);
             }
           }
         }
