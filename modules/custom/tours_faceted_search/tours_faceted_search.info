@@ -1,7 +1,7 @@
 name = Tours Faceted Search
 description = Provides an example implementation of a Search API backed Rooms availability search.
 core = 7.x
-package = Rooms
+package = Tours
 version = 7.x-1.0
 project = tours_faceted_search
 dependencies[] = facetapi

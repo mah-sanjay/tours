@@ -106,16 +106,16 @@ function _tours_line_item_type_fields() {
         'label' => t('Booking Options'),
         'cardinality' => -1,
         'required' => 0,
-        'type' => 'tours_options',
+        'type' => 'rooms_options',
         'module' => 'rooms',
         'settings' => array(
           'user_register_form' => FALSE,
         ),
         'widget' => array(
           'active' => 0,
-          'module' => 'tours_unit',
+          'module' => 'rooms_unit',
           'settings' => array(),
-          'type' => 'tours_options_combined',
+          'type' => 'rooms_options_combined',
           'weight' => '0',
         ),
       ),
@@ -372,7 +372,7 @@ function _tours_line_item_type_fields() {
             'label' => 'above',
             'module' => NULL,
             'settings' => array(),
-            'type' => 'tours_options_default',
+            'type' => 'rooms_options_default',
             'weight' => 12,
           ),
           'teaser' => array(
@@ -388,7 +388,7 @@ function _tours_line_item_type_fields() {
         ),
         'widget' => array(
           'module' => 'rooms',
-          'type' => 'tours_options_combined',
+          'type' => 'rooms_options_combined',
         ),
       ),
       'tours_booking_children_ages' => array(
