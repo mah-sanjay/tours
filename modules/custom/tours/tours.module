@@ -585,6 +585,10 @@ function tours_form_rooms_booking_edit_form_alter(&$form, &$form_state) {
 
     $profile = tours_get_default_customer_profile();
     $form['client']['#default_value'] = $profile->commerce_customer_address[LANGUAGE_NONE][0]['name_line'] . ':' . $profile->profile_id;
+
+    if (($key = array_search('rooms_booking_manager_rooms_booking_edit_form_submit', $form['actions']['submit']['#submit'])) !== FALSE) {
+      unset($form['actions']['submit']['#submit'][$key]);
+    }
   }
 }
 
@@ -788,18 +792,13 @@ function tours_set_tour_dates($entity) {
     return FALSE;
   } else {
     $tour_event = new BookingEvent($entity->unit_id, ROOMS_AVAILABLE, $start_date, $end_date);
-    dpm($tour_event);
+
     $events = array($tour_event);
     $ac = new UnitCalendar($entity->unit_id);
     $ac->updateCalendar($events);
   }
 
-
-  dpm($start_date);
-  dpm($end_date);
   return TRUE;
-  // Get the tour dates from the entity
-  //$start_date = $entity->field_tour_dates[LANGUAGE_NONE]
 }
 
 /**
@@ -1011,16 +1010,48 @@ function _tours_availability_reference_potential_references($field, $options) {
   return $references;
 }
 
-function tours_book_now_form($form, &$form_state, $booking) {
-  $form['booking_id'] = array(
-    '#type' => 'hidden',
-    '#value' => $booking->booking_id,
-  );
+function tours_booking_free_quantity($booking) {
+  $unit = rooms_unit_load($booking->unit_id);
 
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Book Now'),
-  );
+  $free_quantity = $unit->max_sleeps;
+
+  if (isset($booking->field_tour_orders[LANGUAGE_NONE])) {
+    foreach ($booking->field_tour_orders[LANGUAGE_NONE] as $order_id) {
+      $order = commerce_order_load($order_id['target_id']);
+
+      foreach ($order->commerce_line_items as $lang => $item) {
+        foreach ($item as $item_id) {
+          $line_item = commerce_line_item_load($item_id['line_item_id']);
+
+          $free_quantity -= $line_item->tours_booking_number_people[LANGUAGE_NONE][0]['value'];
+        }
+      }
+    }
+  }
+
+  return $free_quantity;
+}
+
+function tours_book_now_form($form, &$form_state, $booking) {
+  $free_quantity = tours_booking_free_quantity($booking);
+
+  if ($free_quantity > 0) {
+    $form['booking_id'] = array(
+      '#type' => 'hidden',
+      '#value' => $booking->booking_id,
+    );
+
+    $form['group_size'] = array(
+      '#title' => t('Quantity'),
+      '#type' => 'select',
+      '#options' => range(1, $free_quantity),
+    );
+
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Book Now'),
+    );
+  }
 
   return $form;
 }
@@ -1034,6 +1065,7 @@ function tours_book_now_form_submit($form, &$form_state) {
   commerce_order_save($order);
 
   $booking_id = $form_state['values']['booking_id'];
+  $group_size = $form_state['values']['group_size'] + 1;
 
   $booking = rooms_booking_load($booking_id);
 
@@ -1045,18 +1077,20 @@ function tours_book_now_form_submit($form, &$form_state) {
   $sd = $booking->start_date_object;
   $ed = $booking->end_date_object;
 
-  $booking_parameters = array('adults' => $booking->data['group_size'], 'children' => 0);
+  $booking_parameters = array('adults' => 1, 'children' => 0);
 
   $agent = new AvailabilityAgent($sd, $ed, $booking_parameters);
 
   $price_modifiers = array();
 
-  $line_item = tours_create_line_item($unit, $agent, $booking_parameters, $price_modifiers);
+  for ($i = 0; $i < $group_size; $i++) {
+    $line_item = tours_create_line_item($unit, $agent, $booking_parameters, $price_modifiers);
 
-  $line_item->tours_booking_reference['und'][0]['target_id'] = $booking->booking_id;
+    $line_item->tours_booking_reference[LANGUAGE_NONE][0]['target_id'] = $booking->booking_id;
 
-  // Add line item to cart.
-  $line_item = commerce_cart_product_add($user->uid, $line_item, FALSE);
+    // Add line item to cart.
+    $line_item = commerce_cart_product_add($user->uid, $line_item, FALSE);
+  }
 
   // Refresh line items price and redirect to bookings page.
   commerce_cart_order_refresh(commerce_cart_order_load($user->uid));
@@ -1154,11 +1188,24 @@ function tours_commerce_checkout_complete($order) {
     foreach ($item as $item_id) {
       $line_item = commerce_line_item_load($item_id['line_item_id']);
       if ($line_item->type == 'tours_booking') {
-        $booking = rooms_booking_load($line_item->tours_booking_reference['und'][0]['target_id']);
+        $booking = rooms_booking_load($line_item->tours_booking_reference[LANGUAGE_NONE][0]['target_id']);
 
-        $booking->field_tour_orders['und'][0]['target_id'] = $order->order_id;
+        $already_added = FALSE;
+        foreach ($booking->field_tour_orders[LANGUAGE_NONE] as $order_id) {
+          if ($order_id['target_id'] == $order->order_id) {
+            $already_added = TRUE;
+          }
+        }
 
-        rooms_booking_save($booking);
+        if (!$already_added) {
+          $booking->field_tour_orders[LANGUAGE_NONE][]['target_id'] = $order->order_id;
+
+          if (tours_booking_free_quantity($booking) <= 0) {
+            $booking->booking_status = 1;
+          }
+
+          rooms_booking_save($booking);
+        }
       }
     }
   }
