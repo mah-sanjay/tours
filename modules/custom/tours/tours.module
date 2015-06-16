@@ -19,6 +19,346 @@ define ('TOURS_MULTI_DAY', 'multi_day_tour');
  */
 
 /**
+ * Implements hook_menu().
+ */
+function tours_menu() {
+  $items['tours_availability_reference/autocomplete/%/%/%'] = array(
+    'page callback' => 'tours_availability_reference_autocomplete',
+    'page arguments' => array(2, 3, 4),
+    'access arguments' => array('reference booking unit availability'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function tours_theme() {
+  return array(
+    'tours_availability_field_calendar' => array(
+      'render element' => 'tours_availability_field_calendar',
+      'template' => 'tours_availability_field_calendar',
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_info().
+ */
+function tours_field_info() {
+  return array(
+    'tours_availability_reference' => array(
+      'label' => t('Tours Availability Reference'),
+      'description' => t('Display availability information embedded from other fieldable content.'),
+      'settings' => array(
+        'referenceable_unit_types' => array(),
+      ),
+      'default_widget' => 'tours_availability_reference_autocomplete',
+      'default_formatter' => 'tours_availability_reference_default',
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_is_empty().
+ */
+function tours_field_is_empty($item, $field) {
+  return empty($item['unit_id']);
+}
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function tours_field_formatter_info() {
+  $ret = array(
+    'tours_availability_reference_default' => array(
+      'label' => t('Tours Availability Calendar'),
+      'description' => t('Displays availability information on a calendar.'),
+      'field types' => array('tours_availability_reference', 'entityreference'),
+      'settings' => array('book_now' => '1', 'enquire_about' => '1'),
+    ),
+  );
+  return $ret;
+}
+
+/**
+ * Implements hook_field_formatter_prepare_view().
+ */
+function tours_field_formatter_prepare_view($entity_type, $entities, $field, $instances, $langcode, &$items, $displays) {
+  if ($field['type'] == 'entityreference') {
+    entityreference_field_formatter_prepare_view($entity_type, $entities, $field, $instances, $langcode, $items, $displays);
+  }
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ *
+ * @todo parametrize date range
+ */
+function tours_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+
+  $booking_ids = array();
+  $element = array();
+
+  switch ($display['type']) {
+    case 'tours_availability_reference_default':
+
+      $unit_names = array();
+      $unit_ids = array();
+      foreach ($items as $delta => $item) {
+        if ($field['type'] == 'entityreference') {
+          if (empty($item['access'])) {
+            continue;
+          }
+          $unit = ($item['entity']);
+        }
+        else {
+          $unit = rooms_unit_load($item['unit_id']);
+        }
+
+        if ($unit) {
+          $unit_names[] = $unit->name;
+          $unit_ids[] = $unit->unit_id;
+        }
+      }
+
+      foreach ($unit_ids as $unit_id) {
+        $booking_ids = rooms_booking_ids(array('unit_id' => $unit_id));
+      }
+
+    break;
+  }
+
+  if (!empty($booking_ids)) {
+    $results = array();
+
+    $bookings = rooms_booking_load_multiple(array_keys($booking_ids), array('type' => 'tour_instance'));
+
+    $currency_setting = commerce_currency_load(commerce_default_currency());
+    $currency_symbol = $currency_setting['symbol'];
+
+    foreach ($bookings as $booking) {
+      $results[] = array(
+        'id' => $booking->booking_id,
+        'start_date' => $booking->start_date_object->format('Y-m-d'),
+        'end_date' => $booking->end_date_object->format('Y-m-d'),
+        'price' => t('@currency_symbol @amount', array('@currency_symbol' => $currency_symbol, '@amount' => number_format($booking->price / 100, 2, '.', ''))),
+        'book_now' => drupal_get_form('tours_book_now_form', $booking),
+        'settings' => $display['settings'],
+      );
+    }
+
+    if (!empty($results)) {
+      $element[] = array(
+        '#theme' => 'tours_availability_field_calendar',
+        'bookings' => $results,
+      );
+    }
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_field_settings_form().
+ */
+function tours_field_settings_form($field, $instance, $has_data) {
+  $settings = $field['settings'];
+
+  $form = array();
+  $form['referenceable_unit_types'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Unit types that can be referenced'),
+    '#multiple' => TRUE,
+    '#default_value' => isset($settings['referenceable_unit_types']) ? $settings['referenceable_unit_types'] : array(),
+    '#options' => array_map('check_plain', rooms_unit_types_ids()),
+  );
+
+  return $form;
+
+}
+
+/**
+ * Implements hook_field_validate().
+ */
+function tours_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
+  // Extract unit ids to check.
+  $ids = array();
+
+  // Check for non-numeric values.
+  // First check non-numeric "nid's to avoid losing time with them.
+  foreach ($items as $delta => $item) {
+    if (is_array($item) && !empty($item['unit_id'])) {
+      if (is_numeric($item['unit_id'])) {
+        $ids[] = $item['unit_id'];
+      }
+      else {
+        $errors[$field['field_name']][$langcode][$delta][] = array(
+          'error' => 'invalid_unit_id',
+          'message' => t('%name: invalid input.',
+            array('%name' => $instance['label'])),
+        );
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_field_widget_info().
+ */
+function tours_field_widget_info() {
+  return array(
+    'tours_availability_reference_autocomplete' => array(
+      'label'       => t('Autocomplete text field'),
+      'description' => t('Display the list of referenceable units as a textfield with autocomplete behaviour.'),
+      'field types' => array('tours_availability_reference'),
+      'settings'    => array(
+        'autocomplete_match' => 'contains',
+        'size' => 60,
+        'autocomplete_path' => 'tours_availability_reference/autocomplete',
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_widget_form().
+ */
+function tours_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  switch ($instance['widget']['type']) {
+    case 'tours_availability_reference_autocomplete':
+      $element += array(
+        '#type' => 'textfield',
+        '#default_value' => isset($items[$delta]['unit_id']) ? $items[$delta]['unit_id'] : NULL,
+        '#autocomplete_path' => $instance['widget']['settings']['autocomplete_path'] . '/' . $instance['entity_type'] . '/' . $instance['bundle'] . '/' . $field['field_name'],
+        '#size' => $instance['widget']['settings']['size'],
+        '#maxlength' => 255,
+        '#element_validate' => array('tours_availability_reference_autocomplete_validate'),
+        '#value_callback' => 'tours_availability_reference_autocomplete_value',
+      );
+      break;
+  }
+  return array('unit_id' => $element);
+}
+
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
+function tours_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+
+  $element['book_now'] = array(
+    '#title' => t('Display "Book now"'),
+    '#type' => 'checkbox',
+    '#default_value' => $settings['book_now'],
+  );
+
+  $element['enquire_about'] = array(
+    '#title' => t('Display "Enquire about this Tour"'),
+    '#type' => 'checkbox',
+    '#default_value' => $settings['enquire_about'],
+  );
+
+  return $element;
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function tours_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+
+  $summary = array();
+
+  $summary[] = ($settings['book_now']) ? 'Display "Book now"' : 'Don\'t display "Book now"';
+  $summary[] = ($settings['enquire_about']) ? 'Display "Enquire about this Tour"' : 'Don\'t display "Enquire about this Tour"';
+
+  return implode('<br />', $summary);
+}
+
+/**
+ * Value callback for a tours_availability_reference autocomplete element.
+ *
+ * Replace the unit id with a unit name.
+ */
+function tours_availability_reference_autocomplete_value($element, $input = FALSE, $form_state) {
+  if ($input === FALSE) {
+    // We're building the displayed 'default value': expand the raw unit id into
+    // "unit name [unit_id:n]".
+    $unit_id = $element['#default_value'];
+    if (!empty($unit_id)) {
+      $unit = rooms_unit_load($unit_id);
+      $value = $unit->name;
+      $value .= ' [unit_id:' . $unit_id . ']';
+      return $value;
+    }
+  }
+}
+
+/**
+ * Validation callback for a node_reference autocomplete element.
+ */
+function tours_availability_reference_autocomplete_validate($element, &$form_state, $form) {
+  $field = field_widget_field($element, $form_state);
+  $instance = field_widget_instance($element, $form_state);
+
+  $value = $element['#value'];
+  $unit_id = NULL;
+
+  if (!empty($value)) {
+    // Check whether we have an explicit "[unit_id:n]" input.
+    preg_match('/^(?:\s*|(.*) )?\[\s*unit_id\s*:\s*(\d+)\s*\]$/', $value, $matches);
+    if (!empty($matches)) {
+      // Explicit nid. Check that the 'title' part matches the actual title for
+      // the nid.
+      list(, $title, $unit_id) = $matches;
+      if (!empty($title)) {
+        $unit = rooms_unit_load($unit_id);
+        $real_title = $unit->name;
+        if (trim($title) != trim($real_title)) {
+          form_error($element, t('%name: title mismatch. Please check your selection.', array('%name' => $instance['label'])));
+        }
+      }
+    }
+    else {
+      // No explicit unit_id (the submitted value was not populated by
+      // autocomplete selection). Get the unit_id of a referenceable node from
+      // the entered title.
+      $options = array(
+        'string' => $value,
+        'match' => 'equals',
+        'limit' => 1,
+      );
+      $references = tours_availability_reference_potential_references($field, $options);
+      if ($references) {
+        // @todo The best thing would be to present the user with an
+        // additional form, allowing the user to choose between valid
+        // candidates with the same title. ATM, we pick the first
+        // matching candidate...
+        $unit_id = key($references);
+      }
+      else {
+        form_error($element, t('%name: unable to find a unit with that title.', array('%name' => $instance['label'])));
+      }
+    }
+  }
+
+  // Set the element's value as the node id that was extracted from the entered
+  // input.
+  form_set_value($element, $unit_id, $form_state);
+}
+
+/**
+ * Implements hook_field_widget_error().
+ */
+function tours_field_widget_error($element, $error, $form, &$form_state) {
+  form_error($element['unit_id'], $error['message']);
+}
+
+/**
  * Implements hook_form_FORM_ID_alter().
  *
  * FORM_ID = rooms_unit_type_form
@@ -516,5 +856,310 @@ function tours_get_tour_types($all = FALSE) {
     return array(TOURS_MULTI_DAY, TOURS_SINGLE_DAY, TOURS_SINGLE_DAY_SLOT);
   } else {
     return array(TOURS_MULTI_DAY, TOURS_SINGLE_DAY);
+  }
+}
+
+/**
+ * Menu callback for the autocomplete results.
+ */
+function tours_availability_reference_autocomplete($entity_type, $bundle, $field_name, $string = '') {
+  $field = field_info_field($field_name);
+  $instance = field_info_instance($entity_type, $field_name, $bundle);
+
+  $options = array(
+    'string' => $string,
+    'match' => $instance['widget']['settings']['autocomplete_match'],
+    'limit' => 10,
+  );
+  $references = tours_availability_reference_potential_references($field, $options);
+
+  $matches = array();
+  foreach ($references as $id => $row) {
+    // Markup is fine in autocompletion results (might happen when rendered
+    // through Views) but we want to remove hyperlinks.
+    $suggestion = preg_replace('/<a href="([^<]*)">([^<]*)<\/a>/', '$2', $row['rendered']);
+    // Add a class wrapper for a few required CSS overrides.
+    $matches[$row['title'] . " [unit_id:$id]"] = '<div class="reference-autocomplete">' . $suggestion . '</div>';
+  }
+
+  drupal_json_output($matches);
+}
+
+/**
+ * Retrieves an array of candidate referenceable booking units.
+ *
+ * This info is used in various places (allowed values, autocomplete
+ * results, input validation...). Some of them only need the nids,
+ * others nid + titles, others yet nid + titles + rendered row (for
+ * display in widgets).
+ *
+ * The array we return contains all the potentially needed information,
+ * and lets consumers use the parts they actually need.
+ *
+ * @param array $field
+ *   The field definition.
+ * @param array $options
+ *   An array of options to limit the scope of the returned list. The following
+ *   key/value pairs are accepted:
+ *   - string: string to filter unit names on (used by autocomplete).
+ *   - match: operator to match the above string against, can be any of:
+ *     'contains', 'equals', 'starts_with'. Defaults to 'contains'.
+ *   - ids: array of specific unit ids to lookup.
+ *   - limit: maximum size of the the result set. Defaults to 0 (no limit).
+ *
+ * @return array
+ *   An array of valid units in the form:
+ *   array(
+ *     unit_id => array(
+ *       'name' => The unit title,
+ *       'rendered' => The text to display in widgets (can be HTML)
+ *     ),
+ *     ...
+ *   )
+ */
+function tours_availability_reference_potential_references($field, $options = array()) {
+  // Fill in default options.
+  $options += array(
+    'string' => '',
+    'match' => 'contains',
+    'ids' => array(),
+    'limit' => 0,
+  );
+
+  $results = &drupal_static(__FUNCTION__, array());
+
+  // Create unique id for static cache.
+  $cid = $field['field_name'] . ':' . $options['match'] . ':'
+    . ($options['string'] !== '' ? $options['string'] : implode('-', $options['ids']))
+    . ':' . $options['limit'];
+  if (!isset($results[$cid])) {
+    $references = FALSE;
+
+    if ($references === FALSE) {
+      $references = _tours_availability_reference_potential_references($field, $options);
+    }
+
+    // Store the results.
+    $results[$cid] = !empty($references) ? $references : array();
+  }
+
+  return $results[$cid];
+}
+
+/**
+ * Helper function for node_reference_potential_references().
+ *
+ * List of referenceable nodes defined by content types.
+ */
+function _tours_availability_reference_potential_references($field, $options) {
+  // Avoid useless work.
+  if (!isset($field['settings']['referenceable_unit_types'])) {
+    return array();
+  }
+
+  if (!count($field['settings']['referenceable_unit_types'])) {
+    return array();
+  }
+
+  $query = db_select('rooms_units', 'u');
+  $unit_unit_id_alias = $query->addField('u', 'unit_id');
+  $unit_name_alias = $query->addField('u', 'name', 'name');
+  $unit_type_alias = $query->addField('u', 'type', 'type');
+
+  if (is_array($field['settings']['referenceable_unit_types'])) {
+    $query->condition('u.type', $field['settings']['referenceable_unit_types'], 'IN');
+  }
+
+  if ($options['string'] !== '') {
+    switch ($options['match']) {
+      case 'contains':
+        $query->condition('u.name', '%' . $options['string'] . '%', 'LIKE');
+        break;
+
+      case 'starts_with':
+        $query->condition('u.name', $options['string'] . '%', 'LIKE');
+        break;
+
+      case 'equals':
+      default:
+        // No match type or incorrect match type: use "=".
+        $query->condition('u.name', $options['string']);
+        break;
+    }
+  }
+
+  if ($options['ids']) {
+    $query->condition('u.unit_id', $options['ids'], 'IN');
+  }
+
+  if ($options['limit']) {
+    $query->range(0, $options['limit']);
+  }
+
+  $query
+    ->orderBy($unit_name_alias)
+    ->orderBy($unit_type_alias);
+
+  $result = $query->execute()->fetchAll();
+  $references = array();
+  foreach ($result as $unit) {
+    $references[$unit->unit_id] = array(
+      'title'    => $unit->name,
+      'rendered' => check_plain($unit->name),
+    );
+  }
+  return $references;
+}
+
+function tours_book_now_form($form, &$form_state, $booking) {
+  $form['booking_id'] = array(
+    '#type' => 'hidden',
+    '#value' => $booking->booking_id,
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Book Now'),
+  );
+
+  return $form;
+}
+
+function tours_book_now_form_submit($form, &$form_state) {
+  module_load_include('inc', 'tours', 'tours.commerce');
+
+  global $user;
+
+  $order = commerce_order_new($user->uid, 'pending');
+  commerce_order_save($order);
+
+  $booking_id = $form_state['values']['booking_id'];
+
+  $booking = rooms_booking_load($booking_id);
+
+  $unit = array(
+    'unit' => rooms_unit_load($booking->unit_id),
+    'state' => ROOMS_AVAILABLE,
+  );
+
+  $sd = $booking->start_date_object;
+  $ed = $booking->end_date_object;
+
+  $booking_parameters = array('adults' => $booking->data['group_size'], 'children' => 0);
+
+  $agent = new AvailabilityAgent($sd, $ed, $booking_parameters);
+
+  $price_modifiers = array();
+
+  $line_item = tours_create_line_item($unit, $agent, $booking_parameters, $price_modifiers);
+
+  $line_item->tours_booking_reference['und'][0]['target_id'] = $booking->booking_id;
+
+  // Add line item to cart.
+  $line_item = commerce_cart_product_add($user->uid, $line_item, FALSE);
+
+  // Refresh line items price and redirect to bookings page.
+  commerce_cart_order_refresh(commerce_cart_order_load($user->uid));
+
+  $form_state['redirect'] = 'bookings';
+}
+
+/**
+ * Calculates the price for rooms_booking line item types.
+ *
+ * @param object $line_item
+ *   Line item to modify.
+ */
+function tours_price_apply($line_item) {
+  if ($line_item->type == 'tours_booking') {
+    if ($item = field_get_items('commerce_line_item', $line_item, 'commerce_product')) {
+      $product = commerce_product_load($item[0]['product_id']);
+      if ($product->sku != 'ROOMS-BASIC-BOOKING') {
+        return;
+      }
+    }
+    $amount = $line_item->commerce_unit_price[LANGUAGE_NONE][0]['amount'];
+
+    $start_date = new DateTime($line_item->tours_booking_dates[LANGUAGE_NONE][0]['value']);
+    $end_date = new DateTime($line_item->tours_booking_dates[LANGUAGE_NONE][0]['value2']);
+
+    $unit_id = $line_item->tours_booked_unit_id[LANGUAGE_NONE][0]['value'];
+    $unit = rooms_unit_load($unit_id);
+
+    // First set up price modifiers.
+    $price_options = is_array(field_get_items('commerce_line_item', $line_item, 'rooms_booking_options')) ? field_get_items('commerce_line_item', $line_item, 'rooms_booking_options') : array();
+
+    // Convert Price options in Price modifiers.
+    foreach ($price_options as $option) {
+      $price_modifiers[strtolower(str_replace(array(':', ' '), '_', $option['name']))] = array(
+        '#name' => $option['name'],
+        '#type' => ROOMS_DYNAMIC_MODIFIER,
+        '#op_type' => $option['operation'],
+        '#amount' => $option['value'],
+        '#quantity' => $option['quantity'],
+      );
+    }
+
+    $adults = $line_item->tours_booking_number_people[LANGUAGE_NONE][0]['value'];
+    $children = $line_item->tours_booking_number_people[LANGUAGE_NONE][1]['value'];
+    $childrens_age = (isset($line_item->tours_booking_children_ages[LANGUAGE_NONE])) ?
+                      $line_item->tours_booking_children_ages[LANGUAGE_NONE] : array();
+
+    $booking_info = array(
+      'start_date' => clone($start_date),
+      'end_date' => clone($end_date),
+      'unit' => $unit,
+      'booking_parameters' => array(
+        'group_size' => $adults,
+        'group_size_children' => $children,
+        'childrens_age' => $childrens_age,
+      ),
+    );
+
+    // Give other modules a chance to change the price modifiers.
+    drupal_alter('rooms_price_modifier', $price_modifiers, $booking_info);
+
+    $price_calendar = new UnitPricingCalendar($unit->unit_id, $price_modifiers);
+
+    $temp_end_date = clone($end_date);
+    $temp_end_date->sub(new DateInterval('P1D'));
+
+    $price = $price_calendar->calculatePrice($start_date, $temp_end_date, $adults, $children, $childrens_age);
+
+    $full_price = $price['full_price'] * 100;
+
+    $line_item->commerce_unit_price[LANGUAGE_NONE][0]['amount'] = $full_price;
+    $line_item->commerce_unit_price[LANGUAGE_NONE][0]['currency_code'] = commerce_default_currency();
+
+    foreach ($line_item->commerce_unit_price[LANGUAGE_NONE][0]['data']['components'] as $key => $component) {
+      $line_item->commerce_unit_price[LANGUAGE_NONE][0]['data']['components'][$key]['price']['amount'] = $full_price / $amount * $component['price']['amount'];
+    }
+  }
+}
+
+/**
+ * Implements hook_default_rules_configuration_alter().
+ */
+function tours_default_rules_configuration_alter(&$configs) {
+  if (isset($configs['rooms'])) {
+    $configs['rooms']->action('tours_price_apply', array('#_needs_processing' => TRUE, 'commerce_line_item:select' => 'commerce-line-item'));
+  }
+}
+
+/**
+ * Implements hook_commerce_checkout_complete().
+ */
+function tours_commerce_checkout_complete($order) {
+  foreach ($order->commerce_line_items as $lang => $item) {
+    foreach ($item as $item_id) {
+      $line_item = commerce_line_item_load($item_id['line_item_id']);
+      if ($line_item->type == 'tours_booking') {
+        $booking = rooms_booking_load($line_item->tours_booking_reference['und'][0]['target_id']);
+
+        $booking->field_tour_orders['und'][0]['target_id'] = $order->order_id;
+
+        rooms_booking_save($booking);
+      }
+    }
   }
 }

@@ -9,6 +9,7 @@ dependencies[] = features
 dependencies[] = inline_entity_form
 dependencies[] = rooms
 dependencies[] = rooms_unit
+dependencies[] = rooms_booking_manager
 dependencies[] = timefield
 dependencies[] = tours_faceted_search
 dependencies[] = views
