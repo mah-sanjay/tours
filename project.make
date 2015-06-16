@@ -20,7 +20,7 @@ projects[rooms][download][url] = "git://github.com/Roomify/rooms.git"
 projects[rooms][directory_name] = "rooms"
 projects[rooms][subdir] = "contrib"
 
-projects[addressfield][version] = "1.0"
+projects[addressfield][version] = "1.1"
 projects[addressfield][subdir] = "contrib"
 
 projects[chosen][version] = "2.0-beta4"
@@ -86,7 +86,7 @@ projects[panels_bootstrap_layouts][subdir] = "contrib"
 projects[panels_tabs][version] = "2.x-dev"
 projects[panels_tabs][subdir] = "contrib"
 
-projects[rules][version] = "2.7"
+projects[rules][version] = "2.9"
 projects[rules][subdir] = "contrib"
 
 projects[search_api][version] = "1.14"
