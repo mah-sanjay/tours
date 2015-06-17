@@ -85,7 +85,8 @@ function tours_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'rooms_unit-multi_day_tour-rooms_booking_unit_options'
+  // Exported field_instance:
+  // 'rooms_unit-multi_day_tour-rooms_booking_unit_options'
   $field_instances['rooms_unit-multi_day_tour-rooms_booking_unit_options'] = array(
     'bundle' => 'multi_day_tour',
     'default_value' => NULL,
@@ -157,7 +158,8 @@ function tours_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'rooms_unit-single_day_tour-rooms_booking_unit_options'
+  // Exported field_instance:
+  // 'rooms_unit-single_day_tour-rooms_booking_unit_options'
   $field_instances['rooms_unit-single_day_tour-rooms_booking_unit_options'] = array(
     'bundle' => 'single_day_tour',
     'default_value' => NULL,
@@ -224,7 +226,8 @@ function tours_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'rooms_unit-single_day_tour_slot-field_day_tour_time_slot'
+  // Exported field_instance:
+  // 'rooms_unit-single_day_tour_slot-field_day_tour_time_slot'
   $field_instances['rooms_unit-single_day_tour_slot-field_day_tour_time_slot'] = array(
     'bundle' => 'single_day_tour_slot',
     'default_value' => NULL,
@@ -282,7 +285,8 @@ function tours_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'rooms_unit-single_day_tour_slot-rooms_booking_unit_options'
+  // Exported field_instance:
+  // 'rooms_unit-single_day_tour_slot-rooms_booking_unit_options'
   $field_instances['rooms_unit-single_day_tour_slot-rooms_booking_unit_options'] = array(
     'bundle' => 'single_day_tour_slot',
     'default_value' => NULL,
@@ -312,7 +316,8 @@ function tours_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'rooms_unit_type-rooms_unit_type-rooms_booking_unit_options'
+  // Exported field_instance:
+  // 'rooms_unit_type-rooms_unit_type-rooms_booking_unit_options'
   $field_instances['rooms_unit_type-rooms_unit_type-rooms_booking_unit_options'] = array(
     'bundle' => 'rooms_unit_type',
     'default_value' => NULL,

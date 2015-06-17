@@ -53,14 +53,6 @@ function tours_field_default_field_bases() {
     'deleted' => 0,
     'entity_types' => array(),
     'field_name' => 'field_day_tour',
-    'foreign keys' => array(
-      'rooms_units' => array(
-        'columns' => array(
-          'target_id' => 'unit_id',
-        ),
-        'table' => 'rooms_units',
-      ),
-    ),
     'indexes' => array(
       'target_id' => array(
         0 => 'target_id',
@@ -96,7 +88,6 @@ function tours_field_default_field_bases() {
     'deleted' => 0,
     'entity_types' => array(),
     'field_name' => 'field_day_tour_time_slot',
-    'foreign keys' => array(),
     'indexes' => array(),
     'locked' => 0,
     'module' => 'timefield',
@@ -116,7 +107,6 @@ function tours_field_default_field_bases() {
     'deleted' => 0,
     'entity_types' => array(),
     'field_name' => 'field_tour_orders',
-    'foreign keys' => array(),
     'indexes' => array(
       'target_id' => array(
         0 => 'target_id',
@@ -154,14 +144,6 @@ function tours_field_default_field_bases() {
     'deleted' => 0,
     'entity_types' => array(),
     'field_name' => 'field_tours_reference',
-    'foreign keys' => array(
-      'unit_id' => array(
-        'columns' => array(
-          'unit_id' => 'unit_id',
-        ),
-        'table' => 'rooms_units',
-      ),
-    ),
     'indexes' => array(
       'unit_id' => array(
         0 => 'unit_id',
