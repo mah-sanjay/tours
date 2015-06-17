@@ -66,7 +66,7 @@ function tours_faceted_search_search_api_query_alter($query) {
     $info = entity_get_info($query->getIndex()->getEntityType());
 
     // Only modify the query if this query is against rooms units.
-    if ($info['base table'] = 'rooms_unit') {
+    if ($info['base table'] == 'rooms_units') {
       $params = drupal_get_query_parameters();
 
       // See if we have dates to search.

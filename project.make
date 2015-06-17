@@ -23,6 +23,9 @@ projects[rooms][subdir] = "contrib"
 projects[addressfield][version] = "1.1"
 projects[addressfield][subdir] = "contrib"
 
+projects[cer][version] = "3.x-dev"
+projects[cer][subdir] = "contrib"
+
 projects[chosen][version] = "2.0-beta4"
 projects[chosen][subdir] = "contrib"
 
@@ -43,6 +46,9 @@ projects[devel][subdir] = "contrib"
 
 projects[diff][version] = "3.2"
 projects[diff][subdir] = "contrib"
+
+projects[elements][version] = "1.4"
+projects[elements][subdir] = "contrib"
 
 projects[entity][version] = "1.5"
 projects[entity][subdir] = "contrib"

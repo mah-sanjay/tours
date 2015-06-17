@@ -145,7 +145,6 @@ function tours_views_default_views() {
   $handler->display->display_options['fields']['booking_status']['table'] = 'rooms_bookings';
   $handler->display->display_options['fields']['booking_status']['field'] = 'booking_status';
   $handler->display->display_options['fields']['booking_status']['label'] = 'Confirmed';
-  $handler->display->display_options['fields']['booking_status']['separator'] = '';
   /* Sort criterion: Bookings: Bookings ID */
   $handler->display->display_options['sorts']['booking_id']['id'] = 'booking_id';
   $handler->display->display_options['sorts']['booking_id']['table'] = 'rooms_bookings';
@@ -260,7 +259,9 @@ function tours_views_default_views() {
   $handler->display->display_options['filters']['booking_status']['id'] = 'booking_status';
   $handler->display->display_options['filters']['booking_status']['table'] = 'rooms_bookings';
   $handler->display->display_options['filters']['booking_status']['field'] = 'booking_status';
-  $handler->display->display_options['filters']['booking_status']['value']['value'] = '0';
+  $handler->display->display_options['filters']['booking_status']['value'] = array(
+    'value' => '0',
+  );
 
   /* Display: Block */
   $handler = $view->new_display('block', 'Block', 'block_1');

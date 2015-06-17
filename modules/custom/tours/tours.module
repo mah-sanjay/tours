@@ -13,6 +13,8 @@ define ('TOURS_SINGLE_DAY', 'single_day_tour');
 define ('TOURS_SINGLE_DAY_SLOT', 'single_day_tour_slot');
 define ('TOURS_MULTI_DAY', 'multi_day_tour');
 
+define ('ROOMS_PART_BOOKED', 4);
+
 
 /**
  * Drupal hooks.
@@ -41,6 +43,45 @@ function tours_theme() {
       'template' => 'tours_availability_field_calendar',
     ),
   );
+}
+
+/**
+ * hook_entity_presave().
+ */
+function tours_entity_presave($entity, $type) {
+  if ($type == 'rooms_unit') {
+    if ($entity->type == 'single_day_tour') {
+      if (isset($entity->field_daily_slot[LANGUAGE_NONE])) {
+        foreach ($entity->field_daily_slot[LANGUAGE_NONE] as $slot_id) {
+          $slot = rooms_unit_load($slot_id['target_id']);
+
+          // Max sleeps and Base price of the Single-Day Tour Slot are the same as the Single-Day Tour
+          $slot->max_sleeps = $entity->max_sleeps;
+          $slot->base_price = $entity->base_price;
+
+          // The Title of the Single-Day Tour Slot is the same Title as the Single-Day Tour Bookable Unit
+          // it is associated with + the start and end time of the tour.
+          if ($slot->name == '') {
+            $time_format = array(
+              'separator' => ':',
+              'period_separator' => '',
+              'period' => 'a',
+              'hour' => 'g',
+              'minute' => 'i'
+            );
+
+            $start_time = timefield_integer_to_time($time_format, $slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value']);
+
+            $end_time = timefield_integer_to_time($time_format, $slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value2']);
+
+            $slot->name = $entity->name . ' (' . $start_time . ' - ' . $end_time . ')';
+          }
+
+          rooms_unit_save($slot);
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -277,78 +318,6 @@ function tours_field_formatter_settings_summary($field, $instance, $view_mode) {
   $summary[] = ($settings['enquire_about']) ? 'Display "Enquire about this Tour"' : 'Don\'t display "Enquire about this Tour"';
 
   return implode('<br />', $summary);
-}
-
-/**
- * Value callback for a tours_availability_reference autocomplete element.
- *
- * Replace the unit id with a unit name.
- */
-function tours_availability_reference_autocomplete_value($element, $input = FALSE, $form_state) {
-  if ($input === FALSE) {
-    // We're building the displayed 'default value': expand the raw unit id into
-    // "unit name [unit_id:n]".
-    $unit_id = $element['#default_value'];
-    if (!empty($unit_id)) {
-      $unit = rooms_unit_load($unit_id);
-      $value = $unit->name;
-      $value .= ' [unit_id:' . $unit_id . ']';
-      return $value;
-    }
-  }
-}
-
-/**
- * Validation callback for a node_reference autocomplete element.
- */
-function tours_availability_reference_autocomplete_validate($element, &$form_state, $form) {
-  $field = field_widget_field($element, $form_state);
-  $instance = field_widget_instance($element, $form_state);
-
-  $value = $element['#value'];
-  $unit_id = NULL;
-
-  if (!empty($value)) {
-    // Check whether we have an explicit "[unit_id:n]" input.
-    preg_match('/^(?:\s*|(.*) )?\[\s*unit_id\s*:\s*(\d+)\s*\]$/', $value, $matches);
-    if (!empty($matches)) {
-      // Explicit nid. Check that the 'title' part matches the actual title for
-      // the nid.
-      list(, $title, $unit_id) = $matches;
-      if (!empty($title)) {
-        $unit = rooms_unit_load($unit_id);
-        $real_title = $unit->name;
-        if (trim($title) != trim($real_title)) {
-          form_error($element, t('%name: title mismatch. Please check your selection.', array('%name' => $instance['label'])));
-        }
-      }
-    }
-    else {
-      // No explicit unit_id (the submitted value was not populated by
-      // autocomplete selection). Get the unit_id of a referenceable node from
-      // the entered title.
-      $options = array(
-        'string' => $value,
-        'match' => 'equals',
-        'limit' => 1,
-      );
-      $references = tours_availability_reference_potential_references($field, $options);
-      if ($references) {
-        // @todo The best thing would be to present the user with an
-        // additional form, allowing the user to choose between valid
-        // candidates with the same title. ATM, we pick the first
-        // matching candidate...
-        $unit_id = key($references);
-      }
-      else {
-        form_error($element, t('%name: unable to find a unit with that title.', array('%name' => $instance['label'])));
-      }
-    }
-  }
-
-  // Set the element's value as the node id that was extracted from the entered
-  // input.
-  form_set_value($element, $unit_id, $form_state);
 }
 
 /**
@@ -599,6 +568,9 @@ function tours_menu_alter(&$items) {
   $items['admin/rooms/units/unit/%rooms_unit/availability']['page callback'] = 'tours_availability_page';
 }
 
+/**
+ * Implements hook_entity_info_alter().
+ */
 function tours_entity_info_alter(&$entity_info) {
   $entity_info['rooms_unit']['inline entity form'] = array(
     'controller' => 'RoomsUnitInlineEntityFormController',
@@ -688,10 +660,82 @@ function tours_line_item_title($line_item) {
   return ($line_item->line_item_label);
 }
 
+/**
+ * Implements hook_default_rules_configuration_alter().
+ */
+function tours_default_rules_configuration_alter(&$configs) {
+  if (isset($configs['rooms'])) {
+    $configs['rooms']->action('tours_price_apply', array('#_needs_processing' => TRUE, 'commerce_line_item:select' => 'commerce-line-item'));
+  }
+}
+
+/**
+ * Implements hook_commerce_checkout_complete().
+ */
+function tours_commerce_checkout_complete($order) {
+  foreach ($order->commerce_line_items as $lang => $item) {
+    foreach ($item as $item_id) {
+      $line_item = commerce_line_item_load($item_id['line_item_id']);
+      if ($line_item->type == 'tours_booking') {
+        $booking = rooms_booking_load($line_item->tours_booking_reference[LANGUAGE_NONE][0]['target_id']);
+
+        $already_added = FALSE;
+        foreach ($booking->field_tour_orders[LANGUAGE_NONE] as $order_id) {
+          if ($order_id['target_id'] == $order->order_id) {
+            $already_added = TRUE;
+          }
+        }
+
+        if (!$already_added) {
+          $booking->field_tour_orders[LANGUAGE_NONE][]['target_id'] = $order->order_id;
+
+          if (tours_booking_free_quantity($booking) <= 0) {
+            $booking->booking_status = 1;
+          }
+
+          rooms_booking_save($booking);
+        }
+      }
+    }
+  }
+}
+
 
 /**
  * Rooms hooks.
  */
+
+/**
+ * Implements hook_rooms_availability_update().
+ */
+function tours_rooms_availability_update($response, $events) {
+  foreach ($response as $event_id => $code) {
+    if ($code == ROOMS_UPDATED) {
+      foreach ($events as $event) {
+        if ($event->id == $event_id) {
+          $unit = rooms_unit_load($event->unit_id);
+          if ($unit->type == 'single_day_tour_slot') {
+            $unit_id = $unit->field_day_tour[LANGUAGE_NONE][0]['target_id'];
+
+            $start_date = $event->start_date;
+            $end_date = $event->end_date;
+
+            if ($event_id < 0) {
+              $event = new BookingEvent($unit_id, ROOMS_PART_BOOKED, $start_date, $end_date);
+              $uc = new UnitCalendar($unit_id);
+              $responses = $uc->updateCalendar(array($event));
+            }
+            else {
+              $event = new BookingEvent($unit_id, ROOMS_AVAILABLE, $start_date, $end_date);
+              $uc = new UnitCalendar($unit_id);
+              $responses = $uc->updateCalendar(array($event));
+            }
+          }
+        }
+      }
+    }
+  }
+}
 
 /**
  * Implements hook_rooms_price_modifier_alter().
@@ -1172,41 +1216,73 @@ function tours_price_apply($line_item) {
 }
 
 /**
- * Implements hook_default_rules_configuration_alter().
+ * Value callback for a tours_availability_reference autocomplete element.
+ *
+ * Replace the unit id with a unit name.
  */
-function tours_default_rules_configuration_alter(&$configs) {
-  if (isset($configs['rooms'])) {
-    $configs['rooms']->action('tours_price_apply', array('#_needs_processing' => TRUE, 'commerce_line_item:select' => 'commerce-line-item'));
+function tours_availability_reference_autocomplete_value($element, $input = FALSE, $form_state) {
+  if ($input === FALSE) {
+    // We're building the displayed 'default value': expand the raw unit id into
+    // "unit name [unit_id:n]".
+    $unit_id = $element['#default_value'];
+    if (!empty($unit_id)) {
+      $unit = rooms_unit_load($unit_id);
+      $value = $unit->name;
+      $value .= ' [unit_id:' . $unit_id . ']';
+      return $value;
+    }
   }
 }
 
 /**
- * Implements hook_commerce_checkout_complete().
+ * Validation callback for a node_reference autocomplete element.
  */
-function tours_commerce_checkout_complete($order) {
-  foreach ($order->commerce_line_items as $lang => $item) {
-    foreach ($item as $item_id) {
-      $line_item = commerce_line_item_load($item_id['line_item_id']);
-      if ($line_item->type == 'tours_booking') {
-        $booking = rooms_booking_load($line_item->tours_booking_reference[LANGUAGE_NONE][0]['target_id']);
+function tours_availability_reference_autocomplete_validate($element, &$form_state, $form) {
+  $field = field_widget_field($element, $form_state);
+  $instance = field_widget_instance($element, $form_state);
 
-        $already_added = FALSE;
-        foreach ($booking->field_tour_orders[LANGUAGE_NONE] as $order_id) {
-          if ($order_id['target_id'] == $order->order_id) {
-            $already_added = TRUE;
-          }
-        }
+  $value = $element['#value'];
+  $unit_id = NULL;
 
-        if (!$already_added) {
-          $booking->field_tour_orders[LANGUAGE_NONE][]['target_id'] = $order->order_id;
-
-          if (tours_booking_free_quantity($booking) <= 0) {
-            $booking->booking_status = 1;
-          }
-
-          rooms_booking_save($booking);
+  if (!empty($value)) {
+    // Check whether we have an explicit "[unit_id:n]" input.
+    preg_match('/^(?:\s*|(.*) )?\[\s*unit_id\s*:\s*(\d+)\s*\]$/', $value, $matches);
+    if (!empty($matches)) {
+      // Explicit nid. Check that the 'title' part matches the actual title for
+      // the nid.
+      list(, $title, $unit_id) = $matches;
+      if (!empty($title)) {
+        $unit = rooms_unit_load($unit_id);
+        $real_title = $unit->name;
+        if (trim($title) != trim($real_title)) {
+          form_error($element, t('%name: title mismatch. Please check your selection.', array('%name' => $instance['label'])));
         }
       }
     }
+    else {
+      // No explicit unit_id (the submitted value was not populated by
+      // autocomplete selection). Get the unit_id of a referenceable node from
+      // the entered title.
+      $options = array(
+        'string' => $value,
+        'match' => 'equals',
+        'limit' => 1,
+      );
+      $references = tours_availability_reference_potential_references($field, $options);
+      if ($references) {
+        // @todo The best thing would be to present the user with an
+        // additional form, allowing the user to choose between valid
+        // candidates with the same title. ATM, we pick the first
+        // matching candidate...
+        $unit_id = key($references);
+      }
+      else {
+        form_error($element, t('%name: unable to find a unit with that title.', array('%name' => $instance['label'])));
+      }
+    }
   }
+
+  // Set the element's value as the node id that was extracted from the entered
+  // input.
+  form_set_value($element, $unit_id, $form_state);
 }
