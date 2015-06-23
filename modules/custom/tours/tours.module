@@ -51,6 +51,9 @@ function tours_form_rooms_unit_edit_form_alter(&$form, &$form_state, $form_id){
     // Hide chidren and bed arrangement stuff.
     unset($form['data']['bed_arrangement']);
     unset($form['child_capacity']);
+
+    // Hide option to create multiple units.
+    $form['multi']['#access'] = FALSE;
   }
 }
 
