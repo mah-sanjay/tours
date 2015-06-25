@@ -21,6 +21,29 @@ define ('TOURS_MULTI_DAY', 'multi_day_tour');
 /**
  * Implements hook_form_FORM_ID_alter().
  *
+ * FORM_ID = rooms_availability_event_manager_form
+ */
+function tours_form_rooms_availability_event_manager_form_alter(&$form, $form_state) {
+  $unit = rooms_unit_load($form['unit_id']['#value']);
+  $tour_types = tours_get_tour_types();
+
+  if (in_array($unit->type, $tour_types)) {
+    // This is a tours unit, hide the standard booking link.
+    if (isset($form['order']['order_link']['standard_booking'])) {
+      unset($form['order']['order_link']['standard_booking']);
+    }
+  }
+  else {
+    // This is not a tours unit, hide the tours booking link.
+    if (isset($form['order']['order_link']['tour_instance'])) {
+      unset($form['order']['order_link']['tour_instance']);
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
  * FORM_ID = rooms_unit_type_form
  */
 function tours_form_rooms_unit_type_form_alter(&$form, &$form_state, $form_id) {
