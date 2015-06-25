@@ -224,16 +224,30 @@ function tours_add_instances_form_submit($form, &$form_state) {
     $value[$delta] = array(
       'value' => date_format($date_start, $format),
       'value2' => date_format($date_end, $format),
+      'date_start' => $date_start,
+      'date_end' => $date_end,
       'offset' => date_offset_get($date_start),
       'offset2' => date_offset_get($date_end),
       'timezone' => $timezone,
       'rrule' => $rrule,
-      );
+    );
   }
 
   // Add the tour instance bookings.
   $unit = rooms_unit_load($form_state['values']['unit_id']);
   foreach ($value as $instance) {
+    // Ensure we don't have a conflicting booking.
+    $rc = new UnitCalendar($unit->unit_id);
+    $states = $rc->getStates($instance['date_start'], $instance['date_end']);
+    // Taking the most conservative approach for now.
+    foreach ($states as $state) {
+      if ($state != ROOMS_AVAILABLE) {
+        drupal_set_message(t('Could not add booking for event with start date of @start and end date of @end, there was an availability conflict!',
+                       array('@start' => $instance['value'], '@end' => $instance['value2'])), 'warning');
+        continue 2;
+      }
+    }
+
     $profile = tours_get_default_customer_profile();
 
     $params = array(
