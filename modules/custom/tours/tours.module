@@ -191,7 +191,7 @@ function tours_field_formatter_view($entity_type, $entity, $field, $instance, $l
           'start_date' => $booking->start_date_object->format('Y-m-d'),
           'end_date' => $booking->end_date_object->format('Y-m-d'),
           'price' => t('@currency_symbol @amount', array('@currency_symbol' => $currency_symbol, '@amount' => number_format($booking->price / 100, 2, '.', ''))),
-          'book_now' => drupal_get_form('tours_book_now_form', $booking),
+          'book_now' => drupal_get_form('tours_book_now_form_' . $booking->booking_id, $booking),
           'settings' => $display['settings'],
         );
       }
@@ -1124,6 +1124,21 @@ function tours_booking_free_quantity($booking) {
   }
 
   return $free_quantity;
+}
+
+/**
+ * Implements hook_forms().
+ *
+ * Allows the book now form to be repeated multiple times on a page.
+ * See https://api.drupal.org/comment/48318
+ */
+function tours_forms($form_id, $args) {
+  $forms = array();
+  if (strncmp($form_id, 'tours_book_now_form_', 20) === 0) {
+    $forms[$form_id] = array('callback' => 'tours_book_now_form');
+  }
+
+  return $forms;
 }
 
 function tours_book_now_form($form, &$form_state, $booking) {
