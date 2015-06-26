@@ -180,15 +180,25 @@ function tours_field_formatter_view($entity_type, $entity, $field, $instance, $l
     $currency_symbol = $currency_setting['symbol'];
 
     foreach ($bookings as $booking) {
-      $results[] = array(
-        'id' => $booking->booking_id,
-        'start_date' => $booking->start_date_object->format('Y-m-d'),
-        'end_date' => $booking->end_date_object->format('Y-m-d'),
-        'price' => t('@currency_symbol @amount', array('@currency_symbol' => $currency_symbol, '@amount' => number_format($booking->price / 100, 2, '.', ''))),
-        'book_now' => drupal_get_form('tours_book_now_form', $booking),
-        'settings' => $display['settings'],
-      );
+      // Ensure start date is good based on the rooms_booking_start_date variable.
+      $now = new DateTime();
+      $diff1 = $now->setTime(0, 0, 0)->diff($booking->start_date_object);
+      $rooms_booking_start_date = variable_get('rooms_booking_start_date', 1);
+      // Don't display past/unbookable tours.
+      if ($diff1->format("%r%a") >= $rooms_booking_start_date) {
+        $results[$booking->start_date_object->format('YmdHis')] = array(
+          'id' => $booking->booking_id,
+          'start_date' => $booking->start_date_object->format('Y-m-d'),
+          'end_date' => $booking->end_date_object->format('Y-m-d'),
+          'price' => t('@currency_symbol @amount', array('@currency_symbol' => $currency_symbol, '@amount' => number_format($booking->price / 100, 2, '.', ''))),
+          'book_now' => drupal_get_form('tours_book_now_form', $booking),
+          'settings' => $display['settings'],
+        );
+      }
     }
+
+    // Order results by start date.
+    ksort($results, SORT_NUMERIC);
 
     if (!empty($results)) {
       $element[] = array(
