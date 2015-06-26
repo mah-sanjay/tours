@@ -75,9 +75,15 @@ function tours_faceted_search_default_search_api_index() {
       },
       "data_alter_callbacks" : {
         "search_api_alter_bundle_filter" : {
-          "status" : 0,
+          "status" : 1,
           "weight" : "-10",
-          "settings" : { "default" : "1", "bundles" : [] }
+          "settings" : {
+            "default" : "1",
+            "bundles" : {
+              "single_day_tour_slot" : "single_day_tour_slot",
+              "unit_with_attributes" : "unit_with_attributes"
+            }
+          }
         },
         "search_api_alter_add_hierarchy" : { "status" : 0, "weight" : "0", "settings" : { "fields" : [] } },
         "search_api_alter_add_viewed_entity" : { "status" : 0, "weight" : "0", "settings" : { "mode" : "Tokens" } },

@@ -41,7 +41,8 @@ function tours_faceted_search_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'rooms_unit-unit_with_attributes-rooms_booking_unit_options'
+  // Exported field_instance:
+  // 'rooms_unit-unit_with_attributes-rooms_booking_unit_options'
   $field_instances['rooms_unit-unit_with_attributes-rooms_booking_unit_options'] = array(
     'bundle' => 'unit_with_attributes',
     'default_value' => NULL,

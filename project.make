@@ -20,8 +20,11 @@ projects[rooms][download][url] = "git://github.com/Roomify/rooms.git"
 projects[rooms][directory_name] = "rooms"
 projects[rooms][subdir] = "contrib"
 
-projects[addressfield][version] = "1.0"
+projects[addressfield][version] = "1.1"
 projects[addressfield][subdir] = "contrib"
+
+projects[cer][version] = "3.x-dev"
+projects[cer][subdir] = "contrib"
 
 projects[chosen][version] = "2.0-beta4"
 projects[chosen][subdir] = "contrib"
@@ -32,7 +35,7 @@ projects[commerce][subdir] = "contrib"
 projects[commerce_cart_expiration][version] = "1.2"
 projects[commerce_cart_expiration][subdir] = "contrib"
 
-projects[ctools][version] = "1.6"
+projects[ctools][version] = "1.7"
 projects[ctools][subdir] = "contrib"
 
 projects[date][version] = "2.8"
@@ -44,7 +47,10 @@ projects[devel][subdir] = "contrib"
 projects[diff][version] = "3.2"
 projects[diff][subdir] = "contrib"
 
-projects[entity][version] = "1.5"
+projects[elements][version] = "1.4"
+projects[elements][subdir] = "contrib"
+
+projects[entity][version] = "1.6"
 projects[entity][subdir] = "contrib"
 
 projects[environment_indicator][version] = "2.5"
@@ -53,7 +59,7 @@ projects[environment_indicator][subdir] = "contrib"
 projects[facetapi][version] = "1.5"
 projects[facetapi][subdir] = "contrib"
 
-projects[features][version] = "2.3"
+projects[features][version] = "2.5"
 projects[features][subdir] = "contrib"
 
 projects[field_group][version] = "1.4"
@@ -86,7 +92,7 @@ projects[panels_bootstrap_layouts][subdir] = "contrib"
 projects[panels_tabs][version] = "2.x-dev"
 projects[panels_tabs][subdir] = "contrib"
 
-projects[rules][version] = "2.7"
+projects[rules][version] = "2.9"
 projects[rules][subdir] = "contrib"
 
 projects[search_api][version] = "1.14"
@@ -107,7 +113,7 @@ projects[timefield][subdir] = "contrib"
 projects[variable][version] = "2.5"
 projects[variable][subdir] = "contrib"
 
-projects[views][version] = "3.8"
+projects[views][version] = "3.11"
 projects[views][subdir] = "contrib"
 
 projects[views_bootstrap][version] = "3.1"
