@@ -730,9 +730,11 @@ function tours_commerce_checkout_complete($order) {
         $booking = rooms_booking_load($line_item->tours_booking_reference[LANGUAGE_NONE][0]['target_id']);
 
         $already_added = FALSE;
-        foreach ($booking->field_tour_orders[LANGUAGE_NONE] as $order_id) {
-          if ($order_id['target_id'] == $order->order_id) {
-            $already_added = TRUE;
+        if (isset($booking->field_tour_orders[LANGUAGE_NONE])) {
+          foreach ($booking->field_tour_orders[LANGUAGE_NONE] as $order_id) {
+            if ($order_id['target_id'] == $order->order_id) {
+              $already_added = TRUE;
+            }
           }
         }
 
