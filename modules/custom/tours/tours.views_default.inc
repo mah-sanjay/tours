@@ -11,6 +11,145 @@ function tours_views_default_views() {
   $export = array();
 
   $view = new view();
+  $view->name = 'tour_bookings';
+  $view->description = '';
+  $view->tag = 'default';
+  $view->base_table = 'commerce_order';
+  $view->human_name = 'Tour Bookings';
+  $view->core = 7;
+  $view->api_version = '3.0';
+  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+
+  /* Display: Master */
+  $handler = $view->new_display('default', 'Master', 'default');
+  $handler->display->display_options['title'] = 'Tour Bookings';
+  $handler->display->display_options['use_more_always'] = FALSE;
+  $handler->display->display_options['access']['type'] = 'none';
+  $handler->display->display_options['cache']['type'] = 'none';
+  $handler->display->display_options['query']['type'] = 'views_query';
+  $handler->display->display_options['exposed_form']['type'] = 'basic';
+  $handler->display->display_options['pager']['type'] = 'full';
+  $handler->display->display_options['pager']['options']['items_per_page'] = '25';
+  $handler->display->display_options['pager']['options']['offset'] = '0';
+  $handler->display->display_options['pager']['options']['id'] = '0';
+  $handler->display->display_options['pager']['options']['quantity'] = '9';
+  $handler->display->display_options['style_plugin'] = 'table';
+  $handler->display->display_options['style_options']['columns'] = array(
+    'order_id' => 'order_id',
+    'commerce_customer_address_name_line' => 'commerce_customer_address_name_line',
+    'start_date' => 'start_date',
+    'edit_booking' => 'edit_booking',
+  );
+  $handler->display->display_options['style_options']['default'] = 'order_id';
+  $handler->display->display_options['style_options']['info'] = array(
+    'order_id' => array(
+      'sortable' => 1,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'commerce_customer_address_name_line' => array(
+      'sortable' => 0,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'start_date' => array(
+      'sortable' => 1,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+    'edit_booking' => array(
+      'align' => '',
+      'separator' => '',
+      'empty_column' => 0,
+    ),
+  );
+  /* Relationship: Entity Reference: Referencing entity */
+  $handler->display->display_options['relationships']['reverse_field_tour_orders_rooms_booking']['id'] = 'reverse_field_tour_orders_rooms_booking';
+  $handler->display->display_options['relationships']['reverse_field_tour_orders_rooms_booking']['table'] = 'commerce_order';
+  $handler->display->display_options['relationships']['reverse_field_tour_orders_rooms_booking']['field'] = 'reverse_field_tour_orders_rooms_booking';
+  /* Relationship: Bookings: Unit ID */
+  $handler->display->display_options['relationships']['unit_id']['id'] = 'unit_id';
+  $handler->display->display_options['relationships']['unit_id']['table'] = 'rooms_bookings';
+  $handler->display->display_options['relationships']['unit_id']['field'] = 'unit_id';
+  $handler->display->display_options['relationships']['unit_id']['relationship'] = 'reverse_field_tour_orders_rooms_booking';
+  /* Relationship: Commerce Order: Referenced customer profile */
+  $handler->display->display_options['relationships']['commerce_customer_billing_profile_id']['id'] = 'commerce_customer_billing_profile_id';
+  $handler->display->display_options['relationships']['commerce_customer_billing_profile_id']['table'] = 'field_data_commerce_customer_billing';
+  $handler->display->display_options['relationships']['commerce_customer_billing_profile_id']['field'] = 'commerce_customer_billing_profile_id';
+  /* Field: Commerce Order: Order ID */
+  $handler->display->display_options['fields']['order_id']['id'] = 'order_id';
+  $handler->display->display_options['fields']['order_id']['table'] = 'commerce_order';
+  $handler->display->display_options['fields']['order_id']['field'] = 'order_id';
+  $handler->display->display_options['fields']['order_id']['link_to_order'] = 'admin';
+  /* Field: Commerce Customer profile: Address - Full name */
+  $handler->display->display_options['fields']['commerce_customer_address_name_line']['id'] = 'commerce_customer_address_name_line';
+  $handler->display->display_options['fields']['commerce_customer_address_name_line']['table'] = 'field_data_commerce_customer_address';
+  $handler->display->display_options['fields']['commerce_customer_address_name_line']['field'] = 'commerce_customer_address_name_line';
+  $handler->display->display_options['fields']['commerce_customer_address_name_line']['relationship'] = 'commerce_customer_billing_profile_id';
+  $handler->display->display_options['fields']['commerce_customer_address_name_line']['label'] = 'Customer name';
+  /* Field: Bookings: Start Date */
+  $handler->display->display_options['fields']['start_date']['id'] = 'start_date';
+  $handler->display->display_options['fields']['start_date']['table'] = 'rooms_bookings';
+  $handler->display->display_options['fields']['start_date']['field'] = 'start_date';
+  $handler->display->display_options['fields']['start_date']['relationship'] = 'reverse_field_tour_orders_rooms_booking';
+  $handler->display->display_options['fields']['start_date']['date_format'] = 'short';
+  $handler->display->display_options['fields']['start_date']['second_date_format'] = 'long';
+  /* Field: Commerce Order: Order status */
+  $handler->display->display_options['fields']['status']['id'] = 'status';
+  $handler->display->display_options['fields']['status']['table'] = 'commerce_order';
+  $handler->display->display_options['fields']['status']['field'] = 'status';
+  /* Field: Bookings: Bookings ID */
+  $handler->display->display_options['fields']['booking_id']['id'] = 'booking_id';
+  $handler->display->display_options['fields']['booking_id']['table'] = 'rooms_bookings';
+  $handler->display->display_options['fields']['booking_id']['field'] = 'booking_id';
+  $handler->display->display_options['fields']['booking_id']['relationship'] = 'reverse_field_tour_orders_rooms_booking';
+  $handler->display->display_options['fields']['booking_id']['label'] = 'Edit Tour Instance';
+  $handler->display->display_options['fields']['booking_id']['alter']['alter_text'] = TRUE;
+  $handler->display->display_options['fields']['booking_id']['alter']['text'] = '<a href="/admin/rooms/bookings/booking/[booking_id]/edit">edit</a>';
+  $handler->display->display_options['fields']['booking_id']['separator'] = '';
+  /* Field: Bookable Units: Bookable units ID */
+  $handler->display->display_options['fields']['unit_id']['id'] = 'unit_id';
+  $handler->display->display_options['fields']['unit_id']['table'] = 'rooms_units';
+  $handler->display->display_options['fields']['unit_id']['field'] = 'unit_id';
+  $handler->display->display_options['fields']['unit_id']['relationship'] = 'unit_id';
+  $handler->display->display_options['fields']['unit_id']['label'] = 'Edit Tour';
+  $handler->display->display_options['fields']['unit_id']['alter']['alter_text'] = TRUE;
+  $handler->display->display_options['fields']['unit_id']['alter']['text'] = '<a href="/admin/rooms/units/unit/[unit_id]/edit">edit</a>';
+  $handler->display->display_options['fields']['unit_id']['separator'] = '';
+  /* Field: Commerce Order: Operations links */
+  $handler->display->display_options['fields']['operations']['id'] = 'operations';
+  $handler->display->display_options['fields']['operations']['table'] = 'commerce_order';
+  $handler->display->display_options['fields']['operations']['field'] = 'operations';
+  $handler->display->display_options['fields']['operations']['label'] = 'Order Operations';
+  $handler->display->display_options['fields']['operations']['add_destination'] = 0;
+  /* Sort criterion: Commerce Order: Order ID */
+  $handler->display->display_options['sorts']['order_id']['id'] = 'order_id';
+  $handler->display->display_options['sorts']['order_id']['table'] = 'commerce_order';
+  $handler->display->display_options['sorts']['order_id']['field'] = 'order_id';
+  $handler->display->display_options['sorts']['order_id']['order'] = 'DESC';
+
+  /* Display: Page */
+  $handler = $view->new_display('page', 'Page', 'page');
+  $handler->display->display_options['path'] = 'admin/rooms/bookings/list';
+  $handler->display->display_options['menu']['type'] = 'default tab';
+  $handler->display->display_options['menu']['title'] = 'Tour Bookings';
+  $handler->display->display_options['menu']['weight'] = '-10';
+  $handler->display->display_options['menu']['context'] = 0;
+  $handler->display->display_options['menu']['context_only_inline'] = 0;
+  $handler->display->display_options['tab_options']['type'] = 'normal';
+  $handler->display->display_options['tab_options']['title'] = 'Bookings';
+  $handler->display->display_options['tab_options']['description'] = 'A list of all bookings. Bookings can be created, edited or deleted manually or can be created following a purchase from a client';
+  $handler->display->display_options['tab_options']['weight'] = '0';
+  $handler->display->display_options['tab_options']['name'] = 'management';
+  $export['tour_bookings'] = $view;
+
+  $view = new view();
   $view->name = 'upcoming_tours';
   $view->description = 'A list of all bookings';
   $view->tag = 'rooms';
@@ -160,8 +299,8 @@ function tours_views_default_views() {
 
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page_1');
-  $handler->display->display_options['path'] = 'admin/rooms/bookings/list';
-  $handler->display->display_options['menu']['type'] = 'default tab';
+  $handler->display->display_options['path'] = 'admin/rooms/bookings/upcoming-tours';
+  $handler->display->display_options['menu']['type'] = 'tab';
   $handler->display->display_options['menu']['title'] = 'Upcoming Tours';
   $handler->display->display_options['menu']['description'] = 'List of upcoming tours';
   $handler->display->display_options['menu']['weight'] = '-10';
