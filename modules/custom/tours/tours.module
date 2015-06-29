@@ -582,6 +582,7 @@ function tours_add_instances_form_submit($form, &$form_state) {
       'start_date' => $instance['value'],
       'end_date' => $instance['value2'],
       'data' => array('group_size' => 0),
+      'price' => $unit->base_price * 100,
     );
     $booking = rooms_booking_create($params);
     rooms_booking_save($booking);
