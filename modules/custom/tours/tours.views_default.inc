@@ -133,6 +133,14 @@ function tours_views_default_views() {
   $handler->display->display_options['sorts']['order_id']['table'] = 'commerce_order';
   $handler->display->display_options['sorts']['order_id']['field'] = 'order_id';
   $handler->display->display_options['sorts']['order_id']['order'] = 'DESC';
+  /* Filter criterion: Commerce Order: Order status */
+  $handler->display->display_options['filters']['status']['id'] = 'status';
+  $handler->display->display_options['filters']['status']['table'] = 'commerce_order';
+  $handler->display->display_options['filters']['status']['field'] = 'status';
+  $handler->display->display_options['filters']['status']['operator'] = 'not in';
+  $handler->display->display_options['filters']['status']['value'] = array(
+    'cart' => 'cart',
+  );
 
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page');
