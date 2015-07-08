@@ -16,11 +16,11 @@ dependencies[] = date_repeat_field
 dependencies[] = entityreference
 dependencies[] = features
 dependencies[] = inline_entity_form
+dependencies[] = reference_delete
 dependencies[] = rooms
 dependencies[] = rooms_booking_manager
 dependencies[] = rooms_unit
 dependencies[] = timefield
-dependencies[] = tours
 dependencies[] = tours_faceted_search
 dependencies[] = views
 explanation = Field type(s) in use - see <a href="/admin/reports/fields">Field list</a>

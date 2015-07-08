@@ -92,6 +92,9 @@ projects[panels_bootstrap_layouts][subdir] = "contrib"
 projects[panels_tabs][version] = "2.x-dev"
 projects[panels_tabs][subdir] = "contrib"
 
+projects[reference_delete][version] = "1.x-dev"
+projects[reference_delete][subdir] = "contrib"
+
 projects[rules][version] = "2.9"
 projects[rules][subdir] = "contrib"
 
