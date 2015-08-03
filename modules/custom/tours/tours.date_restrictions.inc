@@ -1,0 +1,62 @@
+<?php
+
+
+/**
+ * Implements hook_date_restrictions_allowed_values_info().
+ */
+function tours_date_restrictions_allowed_values_info() {
+  return array(
+    'tours' => array(
+      'title' => t('Tours'),
+      'settings' => array(),
+    ),
+  );
+}
+
+/**
+ * Implements allowed_values_remitter_pack callback.
+ */
+function tours_allowed_values_remitter_pack($type, $element, $form_state, $context) {
+  return $element['#restrictions']['allowed_values']['tour_id'];
+}
+
+/**
+ * Implements allowed_values_remitter_unpack callback.
+ */
+function tours_allowed_values_remitter_unpack($type, $remitter) {
+  return $remitter;
+}
+
+/**
+ * Implements allowed_values_access_callback callback.
+ */
+function tours_allowed_values_access_callback($type, $remitter) {
+  return TRUE;
+}
+
+/**
+ * Implements allowed_values_page_callback callback.
+ */
+function tours_allowed_values_page_callback($type, $remitter, $year, $month) {
+  $dates = array();
+
+  $booking_ids = rooms_booking_ids(array('unit_id' => $remitter));
+
+  $bookings = rooms_booking_load_multiple(array_keys($booking_ids), array('type' => 'tour_instance'));
+
+  $now = new DateTime();
+  foreach ($bookings as $booking) {
+    if ($booking->end_date_object > $now) {
+      $start = $booking->start_date_object;
+      $end = $booking->end_date_object;
+      $interval = new DateInterval('P1D');
+      $period   = new DatePeriod($start, $interval, $end);
+
+      foreach ($period as $dt) {
+        $dates[] = $dt->format('Y-m-d');
+      }
+    }
+  }
+
+  return $dates;
+}

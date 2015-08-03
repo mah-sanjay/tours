@@ -1,0 +1,1 @@
+<?php print render($tours_availability_single_day['form']); ?>

@@ -42,6 +42,10 @@ function tours_theme() {
       'render element' => 'tours_availability_field_calendar',
       'template' => 'tours_availability_field_calendar',
     ),
+    'tours_availability_single_day' => array(
+      'render element' => 'tours_availability_single_day',
+      'template' => 'tours_availability_single_day',
+    ),
   );
 }
 
@@ -117,7 +121,7 @@ function tours_field_formatter_info() {
       'label' => t('Tours Availability Calendar'),
       'description' => t('Displays availability information on a calendar.'),
       'field types' => array('tours_availability_reference', 'entityreference'),
-      'settings' => array('book_now' => '1', 'enquire_about' => '1'),
+      'settings' => array('book_now' => '1', 'enquire_about' => '1', 'display_calendar' => '0'),
     ),
   );
   return $ret;
@@ -161,11 +165,22 @@ function tours_field_formatter_view($entity_type, $entity, $field, $instance, $l
         if ($unit) {
           $unit_names[] = $unit->name;
           $unit_ids[] = $unit->unit_id;
+
+          if ($display['settings']['display_calendar']) {
+            $form = drupal_get_form('tours_single_day_book_form', $unit);
+
+            $element[] = array(
+              '#theme' => 'tours_availability_single_day',
+              'form' => $form,
+            );
+          }
         }
       }
 
-      foreach ($unit_ids as $unit_id) {
-        $booking_ids = rooms_booking_ids(array('unit_id' => $unit_id));
+      if (!$display['settings']['display_calendar']) {
+        foreach ($unit_ids as $unit_id) {
+          $booking_ids = rooms_booking_ids(array('unit_id' => $unit_id));
+        }
       }
 
     break;
@@ -312,6 +327,12 @@ function tours_field_formatter_settings_form($field, $instance, $view_mode, $for
     '#default_value' => $settings['enquire_about'],
   );
 
+  $element['display_calendar'] = array(
+    '#title' => t('Display as calendar'),
+    '#type' => 'checkbox',
+    '#default_value' => $settings['display_calendar'],
+  );
+
   return $element;
 }
 
@@ -326,6 +347,7 @@ function tours_field_formatter_settings_summary($field, $instance, $view_mode) {
 
   $summary[] = ($settings['book_now']) ? 'Display "Book now"' : 'Don\'t display "Book now"';
   $summary[] = ($settings['enquire_about']) ? 'Display "Enquire about this Tour"' : 'Don\'t display "Enquire about this Tour"';
+  $summary[] = ($settings['display_calendar']) ? 'Display as calendar' : 'Don\'t display as calendar';
 
   return implode('<br />', $summary);
 }
@@ -1184,6 +1206,150 @@ function tours_forms($form_id, $args) {
   }
 
   return $forms;
+}
+
+function tours_single_day_book_form($form, &$form_state, $tour) {
+  if (isset($form_state['triggering_element'])) {
+    if ($form_state['triggering_element']['#name'] == 'date') {
+      $form_state['values']['time'] = '_none';
+      $form_state['input']['time'] = '_none';
+
+      $form_state['values']['participants'] = '_none';
+      $form_state['input']['participants'] = '_none';
+    }
+    elseif ($form_state['triggering_element']['#name'] == 'time') {
+      $form_state['values']['participants'] = '_none';
+      $form_state['input']['participants'] = '_none';
+    }
+  }
+
+  $form['tour'] = array(
+    '#type' => 'hidden',
+    '#value' => $tour->unit_id,
+  );
+
+  $form['date'] = array(
+    '#title' => t('Select a date'),
+    '#type' => 'datepicker',
+    '#date_format' => 'd/m/Y',
+    '#datepicker_options' => array('minDate' => '+1d', 'maxDate' => '+1y'),
+    '#restrictions' => array(
+      'allowed_values' => array(
+        'type' => 'tours',
+        'tour_id' => '4',
+      ),
+    ),
+    '#ajax' => array(
+      'wrapper' => 'single-day-tour-container',
+      'callback' => 'tours_single_day_ajax_callback',
+    ),
+  );
+
+  $form['container'] = array(
+    '#type' => 'container',
+    '#prefix' => '<div id="single-day-tour-container">',
+    '#suffix' => '</div>',
+  );
+
+  $time_options = array('_none' => t('select time'));
+  $form['container']['time'] = array(
+    '#type' => 'select',
+    '#options' => $time_options,
+    '#disabled' => TRUE,
+    '#default_value' => isset($form_state['values']['time']) ? $form_state['values']['time'] : '_none',
+    '#ajax' => array(
+      'wrapper' => 'single-day-tour-container',
+      'callback' => 'tours_single_day_ajax_callback',
+    ),
+  );
+
+  if (isset($form_state['values']['date']) &&
+      $form_state['values']['date'] != '' && $form_state['values']['date'] != '_none') {
+    $form['container']['time']['#disabled'] = FALSE;
+    foreach ($tour->field_daily_slot[LANGUAGE_NONE] as $id => $slot) {
+      $daily_slot = $slot['entity'];
+      $time_options[$id] = $daily_slot->name;
+    }
+
+    $form['container']['time']['#options'] = $time_options;
+  }
+
+  $participants_options = array('_none' => t('number of participants'));
+  $form['container']['participants'] = array(
+    '#type' => 'select',
+    '#options' => $participants_options,
+    '#disabled' => TRUE,
+    '#default_value' => isset($form_state['values']['participants']) ? $form_state['values']['participants'] : '_none',
+    '#ajax' => array(
+      'wrapper' => 'single-day-tour-container',
+      'callback' => 'tours_single_day_ajax_callback',
+    ),
+  );
+
+  if (isset($form_state['values']['time']) &&
+      $form_state['values']['time'] != '' && $form_state['values']['time'] != '_none') {
+    $form['container']['participants']['#disabled'] = FALSE;
+
+    $id = $form_state['values']['time'];
+    $daily_slot = $tour->field_daily_slot[LANGUAGE_NONE][$id]['entity'];
+
+    $participants_options = array_merge($participants_options, range(1, $daily_slot->max_sleeps));
+
+    $form['container']['participants']['#options'] = $participants_options;
+  }
+
+  $form['container']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Book Now'),
+    '#disabled' => TRUE,
+  );
+
+  if (isset($form_state['values']['participants']) &&
+      $form_state['values']['participants'] != '' && $form_state['values']['participants'] != '_none') {
+    $form['container']['submit']['#disabled'] = FALSE;
+  }
+
+  return $form;
+}
+
+function tours_single_day_ajax_callback($form, &$form_state) {
+  return $form['container'];
+}
+
+function tours_single_day_book_form_submit($form, &$form_state) {
+  global $user;
+  module_load_include('inc', 'tours', 'tours.commerce');
+
+  $order = commerce_cart_order_load($user->uid);
+  if (empty($order)) {
+    $order = commerce_order_new($user->uid, 'pending');
+  }
+
+  $values = $form_state['values'];
+
+  $tour = rooms_unit_load($values['tour']);
+  $date = $values['date'];
+  $daily_slot = $tour->field_daily_slot[LANGUAGE_NONE][$values['time']]['entity'];
+  $participants = $values['participants'];
+
+  $booking_parameters = array('adults' => $participants, 'children' => 0);
+  $agent = new AvailabilityAgent(new DateTime($date), new DateTime($date), $booking_parameters);
+  $price_modifiers = array();
+
+  $unit = array(
+    'unit' => $daily_slot,
+    'state' => ROOMS_AVAILABLE,
+  );
+
+  $line_item = tours_create_line_item($unit, $agent, $booking_parameters, $price_modifiers);
+
+  // Add line item to cart.
+  $line_item = commerce_cart_product_add($user->uid, $line_item, FALSE);
+
+  // Refresh line items price and redirect to bookings page.
+  commerce_cart_order_refresh(commerce_cart_order_load($user->uid));
+
+  $form_state['redirect'] = 'bookings';
 }
 
 function tours_book_now_form($form, &$form_state, $booking) {
