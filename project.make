@@ -41,6 +41,14 @@ projects[ctools][subdir] = "contrib"
 projects[date][version] = "2.8"
 projects[date][subdir] = "contrib"
 
+projects[datepicker][version] = "1.0"
+projects[datepicker][subdir] = "contrib"
+projects[datepicker][patch][] = "https://www.drupal.org/files/issues/ajax-datepicker.patch"
+
+projects[date_restrictions][version] = "1.x-dev"
+projects[date_restrictions][subdir] = "contrib"
+projects[date_restrictions][patch][] = "https://www.drupal.org/files/issues/datepicker-date_restrictions.patch"
+
 projects[devel][version] = "1.5"
 projects[devel][subdir] = "contrib"
 
