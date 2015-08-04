@@ -1,0 +1,23 @@
+.container-inline-date {
+  float: left;
+  clear: none;
+  margin-bottom: 10px;
+}
+.container-inline-date .form-type-textfield label,
+.container-inline-date .form-type-textfield div.description {
+  display: none;
+}
+.container-inline-date .date-padding {
+  padding: 0;
+  float: none;
+}
+
+.rooms-management-form input.form-submit {
+  margin-top: 20px;
+}
+.rooms-management-form .form-actions {
+  padding-top: 0;
+}
+.rooms-management-form .form-actions input {
+  margin-top: 0;
+}

@@ -42,24 +42,32 @@ function tours_create_line_item($unit_to_book, AvailabilityAgent $agent, $bookin
   // Product name - we set something that will make sense to the user here.
   $nights = $dd->diff($agent->start_date)->days;
 
-  $line_item_label = rooms_string(
-    t('Booking for') . ' ' . $unit_type->label . ' (' .
-    format_plural($nights, '1 Night', '@count Nights') . '; ' .
-    t('Arrival') . ': ' . $agent->start_date->format($date_format) . ' ' .
-    t('Departure') . ': ' . $dd->format($date_format) . ')' ,
-    $context = array(
-      '#component' => 'tours',
-      '#purpose' => 'tours_create_line_item',
-      '#data' => array(
-        'unit' => $unit_to_book,
-        'unit_id' => $unit_id,
-        'unit_type' => $unit_type->label,
-        'arrival' => $agent->start_date,
-        'departure' => $dd,
-        'nights' => $nights,
+  if ($unit_type->type == 'single_day_tour_slot') {
+    $day_tour = rooms_unit_load($unit->field_day_tour[LANGUAGE_NONE][0]['target_id']);
+
+    $line_item_label = t('Booking for') . ' "' . $day_tour->name . '" (' . $unit->field_day_tour_time_slot[LANGUAGE_NONE][0]['value_formatted'] . ' - ' . $unit
+      ->field_day_tour_time_slot[LANGUAGE_NONE][0]['value2_formatted'] . '; ' . $agent->start_date->format($date_format) . ')';
+  }
+  else {
+    $line_item_label = rooms_string(
+      t('Booking for') . ' ' . $unit_type->label . ' (' .
+      format_plural($nights, '1 Night', '@count Nights') . '; ' .
+      t('Arrival') . ': ' . $agent->start_date->format($date_format) . ' ' .
+      t('Departure') . ': ' . $dd->format($date_format) . ')' ,
+      $context = array(
+        '#component' => 'tours',
+        '#purpose' => 'tours_create_line_item',
+        '#data' => array(
+          'unit' => $unit_to_book,
+          'unit_id' => $unit_id,
+          'unit_type' => $unit_type->label,
+          'arrival' => $agent->start_date,
+          'departure' => $dd,
+          'nights' => $nights,
+        )
       )
-    )
-  );
+    );
+  }
 
   $line_item->line_item_label = $line_item_label;
 
