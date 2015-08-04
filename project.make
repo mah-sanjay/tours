@@ -3,7 +3,7 @@ core = 7.x
 
 ; Drupal core.
 projects[drupal][type] = core
-projects[drupal][version] = 7.36
+projects[drupal][version] = 7.38
 projects[drupal][patch][] = "https://drupal.org/files/issues/install-redirect-on-empty-database-728702-36.patch"
 
 ; Drush make allows a default sub directory for all contributed projects.
@@ -73,13 +73,13 @@ projects[features][subdir] = "contrib"
 projects[field_group][version] = "1.4"
 projects[field_group][subdir] = "contrib"
 
-projects[inline_entity_form][version] = "1.5"
+projects[inline_entity_form][version] = "1.6"
 projects[inline_entity_form][subdir] = "contrib"
 
 projects[entityreference][version] = "1.1"
 projects[entityreference][subdir] = "contrib"
 
-projects[jquery_update][version] = "2.5"
+projects[jquery_update][version] = "3.0-alpha2"
 projects[jquery_update][subdir] = "contrib"
 
 projects[libraries][version] = "2.2"
