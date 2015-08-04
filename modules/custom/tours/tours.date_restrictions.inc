@@ -40,7 +40,14 @@ function tours_allowed_values_access_callback($type, $remitter) {
 function tours_allowed_values_page_callback($type, $remitter, $year, $month) {
   $dates = array();
 
-  $booking_ids = rooms_booking_ids(array('unit_id' => $remitter));
+  $single_day_tour = rooms_unit_load($remitter);
+
+  $single_day_tour_slots = array();
+  foreach ($single_day_tour->field_daily_slot[LANGUAGE_NONE] as $slot) {
+    $single_day_tour_slots[] = $slot['target_id'];
+  }
+
+  $booking_ids = rooms_booking_ids(array('unit_id' => $single_day_tour_slots, 'booking_status' => '0'));
 
   $bookings = rooms_booking_load_multiple(array_keys($booking_ids), array('type' => 'tour_instance'));
 
@@ -49,8 +56,10 @@ function tours_allowed_values_page_callback($type, $remitter, $year, $month) {
     if ($booking->end_date_object > $now) {
       $start = $booking->start_date_object;
       $end = $booking->end_date_object;
+      $end = $end->modify('+1 day');
+
       $interval = new DateInterval('P1D');
-      $period   = new DatePeriod($start, $interval, $end);
+      $period = new DatePeriod($start, $interval, $end);
 
       foreach ($period as $dt) {
         $dates[] = $dt->format('Y-m-d');

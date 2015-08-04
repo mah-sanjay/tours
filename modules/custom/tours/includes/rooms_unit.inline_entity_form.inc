@@ -7,7 +7,6 @@
 
 class RoomsUnitInlineEntityFormController extends EntityInlineEntityFormController {
 
-
   /**
    * Overrides EntityInlineEntityFormController::tableFields().
    */

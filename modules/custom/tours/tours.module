@@ -54,7 +54,7 @@ function tours_theme() {
  */
 function tours_entity_presave($entity, $type) {
   if ($type == 'rooms_unit') {
-    if ($entity->type == 'single_day_tour') {
+    if ($entity->type == TOURS_SINGLE_DAY) {
       if (isset($entity->field_daily_slot[LANGUAGE_NONE])) {
         foreach ($entity->field_daily_slot[LANGUAGE_NONE] as $slot_id) {
           $slot = rooms_unit_load($slot_id['target_id']);
@@ -84,6 +84,9 @@ function tours_entity_presave($entity, $type) {
           rooms_unit_save($slot);
         }
       }
+    }
+    elseif ($entity->type == TOURS_SINGLE_DAY_SLOT) {
+      $entity->default_state = 1;
     }
   }
 }
@@ -400,40 +403,84 @@ function tours_add_tour_instance($form, &$form_state) {
   // Add the tour instance bookings.
   $unit = rooms_unit_load($form_state['values']['unit_id']);
 
-  $start_date = $form_state['values']['rooms_start_date'];
-  $end_date = $form_state['values']['rooms_end_date'];
+  if ($unit->type == TOURS_SINGLE_DAY_SLOT) {
+    $start_date = $form_state['values']['rooms_start_date'];
+    $end_date = $form_state['values']['rooms_end_date'];
+    $end_date = $end_date->modify('+1 day');
 
-  // Ensure we don't have a conflicting booking.
-  $rc = new UnitCalendar($unit->unit_id);
-  $states = $rc->getStates($start_date, $end_date);
-  // Taking the most conservative approach for now.
-  foreach ($states as $state) {
-    if ($state != ROOMS_AVAILABLE) {
-      drupal_set_message(t('Could not add booking for event with start date of @start and end date of @end, there was an availability conflict!',
-                     array('@start' => $instance['value'], '@end' => $instance['value2'])), 'warning');
-      return;
+    $interval = new DateInterval('P1D');
+    $period = new DatePeriod($start_date, $interval, $end_date);
+
+    foreach ($period as $dt) {
+      // Ensure we don't have a conflicting booking.
+      $rc = new UnitCalendar($unit->unit_id);
+      $states = $rc->getStates($dt, $dt);
+      // Taking the most conservative approach for now.
+      foreach ($states as $state) {
+        if ($state != ROOMS_AVAILABLE) {
+          drupal_set_message(t('Could not add booking for event with start date of @start and end date of @end, there was an availability conflict!',
+                         array('@start' => $instance['value'], '@end' => $instance['value2'])), 'warning');
+          continue;
+        }
+      }
+
+      $profile = tours_get_default_customer_profile();
+
+      $params = array(
+        'unit_id' => $unit->unit_id,
+        'unit_type' => $unit->type,
+        'uid' => $user->uid,
+        'customer_id' => $profile->uid,
+        'name' => $profile->commerce_customer_address[LANGUAGE_NONE][0]['name_line'],
+        'type' => 'tour_instance',
+        'created' => time(),
+        'changed' => time(),
+        'language' => LANGUAGE_NONE,
+        'start_date' => $dt->format('Y-m-d'),
+        'end_date' => $dt->format('Y-m-d'),
+        'data' => array('group_size' => $unit->max_sleeps),
+        'price' => $unit->base_price * 100,
+      );
+      $booking = rooms_booking_create($params);
+      rooms_booking_save($booking);
     }
   }
+  else {
+    $start_date = $form_state['values']['rooms_start_date'];
+    $end_date = $form_state['values']['rooms_end_date'];
 
-  $profile = tours_get_default_customer_profile();
+    // Ensure we don't have a conflicting booking.
+    $rc = new UnitCalendar($unit->unit_id);
+    $states = $rc->getStates($start_date, $end_date);
+    // Taking the most conservative approach for now.
+    foreach ($states as $state) {
+      if ($state != ROOMS_AVAILABLE) {
+        drupal_set_message(t('Could not add booking for event with start date of @start and end date of @end, there was an availability conflict!',
+                       array('@start' => $instance['value'], '@end' => $instance['value2'])), 'warning');
+        return;
+      }
+    }
 
-  $params = array(
-    'unit_id' => $unit->unit_id,
-    'unit_type' => $unit->type,
-    'uid' => $user->uid,
-    'customer_id' => $profile->uid,
-    'name' => $profile->commerce_customer_address[LANGUAGE_NONE][0]['name_line'],
-    'type' => 'tour_instance',
-    'created' => time(),
-    'changed' => time(),
-    'language' => LANGUAGE_NONE,
-    'start_date' => $start_date->format('Y-m-d'),
-    'end_date' => $end_date->format('Y-m-d'),
-    'data' => array('group_size' => 0),
-    'price' => $unit->base_price * 100,
-  );
-  $booking = rooms_booking_create($params);
-  rooms_booking_save($booking);
+    $profile = tours_get_default_customer_profile();
+
+    $params = array(
+      'unit_id' => $unit->unit_id,
+      'unit_type' => $unit->type,
+      'uid' => $user->uid,
+      'customer_id' => $profile->uid,
+      'name' => $profile->commerce_customer_address[LANGUAGE_NONE][0]['name_line'],
+      'type' => 'tour_instance',
+      'created' => time(),
+      'changed' => time(),
+      'language' => LANGUAGE_NONE,
+      'start_date' => $start_date->format('Y-m-d'),
+      'end_date' => $end_date->format('Y-m-d'),
+      'data' => array('group_size' => $unit->max_sleeps),
+      'price' => $unit->base_price * 100,
+    );
+    $booking = rooms_booking_create($params);
+    rooms_booking_save($booking);
+  }
 
   $form_state['rebuild'] = TRUE;
 }
@@ -523,11 +570,6 @@ function tours_form_update_availability_calendar_form_alter(&$form, &$form_state
       '#description' => t('first day tour takes place'),
     );
 
-    $form['rooms_update_availability']['date']['show_repeat_settings'] = array(
-      '#type' => 'hidden',
-      '#value' => 1,
-    );
-
     $form['rooms_update_availability']['parent1'] = array(
       '#type' => 'fieldset',
       '#title' => t('Repeat Rules'),
@@ -536,6 +578,10 @@ function tours_form_update_availability_calendar_form_alter(&$form, &$form_state
       'parent2' => array(
         '#tree' => TRUE,
         '#required' => TRUE,
+        'show_repeat_settings' => array(
+          '#type' => 'value',
+          '#value' => TRUE,
+        ),
         'rrule' => array(
           '#type' => 'date_repeat_rrule',
           '#theme_wrappers' => array('date_repeat_rrule'),
@@ -607,11 +653,6 @@ function tours_form_update_availability_calendar_form_alter(&$form, &$form_state
       '#language' => LANGUAGE_NONE,
     );
 
-    $form['rooms_update_availability']['date']['show_repeat_settings'] = array(
-      '#type' => 'hidden',
-      '#value' => 1,
-    );
-
     $form['rooms_update_availability']['parent1'] = array(
       '#type' => 'fieldset',
       '#title' => t('Repeat Tour Rules'),
@@ -620,6 +661,10 @@ function tours_form_update_availability_calendar_form_alter(&$form, &$form_state
       'parent2' => array(
         '#tree' => TRUE,
         '#required' => TRUE,
+        'show_repeat_settings' => array(
+          '#type' => 'value',
+          '#value' => TRUE,
+        ),
         'rrule' => array(
           '#type' => 'date_repeat_rrule',
           '#theme_wrappers' => array('date_repeat_rrule'),
@@ -628,9 +673,7 @@ function tours_form_update_availability_calendar_form_alter(&$form, &$form_state
           '#date_label_position' => 'above',
           '#date_format' => 'm/d/Y - H:i',
           '#date_increment' => 1,
-          // '#weight' => -9,
           '#date_year_range' => '-0:+1',
-          // '#date_repeat_widget' => 'date_popup_repeat',
           '#date_repeat_widget' => 'date_popup',
           '#date_flexible' => 0,
           '#date_repeat_collapsed' => TRUE,
@@ -650,13 +693,13 @@ function tours_add_instances_form_submit($form, &$form_state) {
   $rrule = $form_state['values']['parent1']['parent2']['rrule'];
   $rrule_values = date_ical_parse_rrule(NULL, $rrule);
   $timezone = date_default_timezone();
-  $format = 'Y-m-d';
+
   $start_date = $form_state['values']['date'];
-  $end_date = $form_state['values']['end_date'];
+  $end_date = (isset($form_state['values']['end_date'])) ? $form_state['values']['end_date'] : $form_state['values']['date'];
 
   // Calculate the event duration.
-  $start = new DateObject($start_date, $timezone, $format);
-  $end = new DateObject($end_date, $timezone, $format);
+  $start = new DateObject($start_date, $timezone, 'Y-m-d');
+  $end = new DateObject($end_date, $timezone, 'Y-m-d');
   $duration = $start->difference($end);
 
   // Figure out when to stop.
@@ -665,7 +708,7 @@ function tours_add_instances_form_submit($form, &$form_state) {
     $end = date_ical_date($rrule_values['UNTIL'], $timezone);
     $end_datetime = date_format($end, DATE_FORMAT_DATETIME);
   }
-  elseif (!empty($rrule_values['COUNT'])) {
+  else {
     $end_datetime = NULL;
   }
 
@@ -696,8 +739,8 @@ function tours_add_instances_form_submit($form, &$form_state) {
     $date_end = clone($date_start);
     date_modify($date_end, '+' . $duration . ' seconds');
     $value[$delta] = array(
-      'value' => date_format($date_start, $format),
-      'value2' => date_format($date_end, $format),
+      'value' => date_format($date_start, 'Y-m-d'),
+      'value2' => date_format($date_end, 'Y-m-d'),
       'date_start' => $date_start,
       'date_end' => $date_end,
       'offset' => date_offset_get($date_start),
@@ -736,7 +779,7 @@ function tours_add_instances_form_submit($form, &$form_state) {
       'language' => LANGUAGE_NONE,
       'start_date' => $instance['value'],
       'end_date' => $instance['value2'],
-      'data' => array('group_size' => 0),
+      'data' => array('group_size' => $unit->max_sleeps),
       'price' => $unit->base_price * 100,
     );
     $booking = rooms_booking_create($params);
@@ -784,9 +827,6 @@ function tours_entity_info_alter(&$entity_info) {
 }
 
 /**
- * When an entity of type tour is saved let's make sure that the tour dates
- * are set as available.
- *
  * Implements hook_entity_insert
  */
 function tours_entity_insert($entity, $type) {
@@ -914,13 +954,13 @@ function tours_commerce_checkout_complete($order) {
         }
 
         // Set booking to confirmed if minimum occupancy has been reached.
-        if (isset($line_item->tours_booked_unit_id)) {
+        /*if (isset($line_item->tours_booked_unit_id)) {
           $unit = rooms_unit_load($line_item->tours_booked_unit_id[LANGUAGE_NONE][0]['value']);
           if (tours_booking_quantity_booked($booking) >= $unit->min_sleeps) {
             $booking->booking_status = 1;
             rooms_booking_save($booking);
           }
-        }
+        }*/
       }
     }
   }
@@ -940,7 +980,7 @@ function tours_rooms_availability_update($response, $events) {
       foreach ($events as $event) {
         if ($event->id == $event_id) {
           $unit = rooms_unit_load($event->unit_id);
-          if ($unit->type == 'single_day_tour_slot') {
+          if ($unit->type == TOURS_SINGLE_DAY_SLOT) {
             $unit_id = $unit->field_day_tour[LANGUAGE_NONE][0]['target_id'];
 
             $start_date = $event->start_date;
@@ -1373,7 +1413,7 @@ function tours_single_day_book_form($form, &$form_state, $tour) {
   $form['date'] = array(
     '#title' => t('Select a date'),
     '#type' => 'datepicker',
-    '#date_format' => 'd/m/Y',
+    '#date_format' => 'Y-m-d',
     '#datepicker_options' => array('minDate' => '+1d', 'maxDate' => '+1y'),
     '#restrictions' => array(
       'allowed_values' => array(
@@ -1408,9 +1448,31 @@ function tours_single_day_book_form($form, &$form_state, $tour) {
   if (isset($form_state['values']['date']) &&
       $form_state['values']['date'] != '' && $form_state['values']['date'] != '_none') {
     $form['container']['time']['#disabled'] = FALSE;
+
+    $single_day_tour_slots = array();
+    foreach ($tour->field_daily_slot[LANGUAGE_NONE] as $slot) {
+      $single_day_tour_slots[] = $slot['target_id'];
+    }
+
+    $results = db_select('rooms_bookings', 'b')
+                ->fields('b', array('unit_id'))
+                ->condition('booking_status', '0')
+                ->condition('unit_id', $single_day_tour_slots)
+                ->condition('start_date', $form_state['values']['date'])
+                ->execute()
+                ->fetchAll();
+
+    $available_slots = array();
+    foreach ($results as $result) {
+      $available_slots[] = $result->unit_id;
+    }
+
     foreach ($tour->field_daily_slot[LANGUAGE_NONE] as $id => $slot) {
       $daily_slot = $slot['entity'];
-      $time_options[$id] = $daily_slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value_formatted'] . ' - ' . $daily_slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value2_formatted'];
+
+      if (in_array($daily_slot->unit_id, $available_slots)) {
+        $time_options[$daily_slot->unit_id] = $daily_slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value_formatted'] . ' - ' . $daily_slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value2_formatted'];
+      }
     }
 
     $form['container']['time']['#options'] = $time_options;
@@ -1435,10 +1497,27 @@ function tours_single_day_book_form($form, &$form_state, $tour) {
     $id = $form_state['values']['time'];
     $daily_slot = $tour->field_daily_slot[LANGUAGE_NONE][$id]['entity'];
 
-    $participants_options = array_merge($participants_options, range(1, $daily_slot->max_sleeps));
+    $booking_id = db_select('rooms_bookings', 'b')
+                  ->fields('b', array('booking_id'))
+                  ->condition('booking_status', '0')
+                  ->condition('unit_id', $form_state['values']['time'])
+                  ->condition('start_date', $form_state['values']['date'])
+                  ->execute()
+                  ->fetchField();
+
+    $booking = rooms_booking_load($booking_id);
+
+    $participants = tours_booking_free_quantity($booking);
+
+    $participants_options = array_merge($participants_options, range(1, $participants));
 
     $form['container']['participants']['#options'] = $participants_options;
   }
+
+  $form['container']['price'] = array(
+    '#type' => 'markup',
+    '#markup' => '<div></div>',
+  );
 
   $form['container']['submit'] = array(
     '#type' => 'submit',
@@ -1449,6 +1528,15 @@ function tours_single_day_book_form($form, &$form_state, $tour) {
   if (isset($form_state['values']['participants']) &&
       $form_state['values']['participants'] != '' && $form_state['values']['participants'] != '_none') {
     $form['container']['submit']['#disabled'] = FALSE;
+
+    $currency_setting = commerce_currency_load(commerce_default_currency());
+    $currency_symbol = $currency_setting['symbol'];
+
+    $price = t('@currency_symbol @amount', array(
+      '@currency_symbol' => $currency_symbol,
+      '@amount' => number_format($daily_slot->base_price * ($form_state['values']['participants'] + 1), 2, '.', ''),
+    ));
+    $form['container']['price']['#markup'] = '<div class="form-item form-group">' . t('Price') . ': ' . $price . '</div>';
   }
 
   return $form;
@@ -1471,8 +1559,16 @@ function tours_single_day_book_form_submit($form, &$form_state) {
 
   $tour = rooms_unit_load($values['tour']);
   $date = $values['date'];
-  $daily_slot = $tour->field_daily_slot[LANGUAGE_NONE][$values['time']]['entity'];
-  $participants = $values['participants'];
+  $daily_slot = rooms_unit_load($values['time']);
+  $participants = $values['participants'] + 1;
+
+  $booking_id = db_select('rooms_bookings', 'b')
+                  ->fields('b', array('booking_id'))
+                  ->condition('booking_status', '0')
+                  ->condition('unit_id', $values['time'])
+                  ->condition('start_date', $values['date'])
+                  ->execute()
+                  ->fetchField();
 
   $booking_parameters = array('adults' => $participants, 'children' => 0);
   $agent = new AvailabilityAgent(new DateTime($date), new DateTime($date), $booking_parameters);
@@ -1485,7 +1581,7 @@ function tours_single_day_book_form_submit($form, &$form_state) {
 
   $line_item = tours_create_line_item($unit, $agent, $booking_parameters, $price_modifiers);
 
-  $line_item->tours_booking_reference[LANGUAGE_NONE][0]['target_id'] = $booking->booking_id;
+  $line_item->tours_booking_reference[LANGUAGE_NONE][0]['target_id'] = $booking_id;
 
   // Add line item to cart.
   $line_item = commerce_cart_product_add($user->uid, $line_item, FALSE);
@@ -1718,15 +1814,17 @@ function tours_field_widget_form_alter(&$element, &$form_state, $context) {
 
       foreach ($element['entities'] as $key => $value) {
         if (is_numeric($key)) {
-          $element['entities'][$key]['actions']['manage_availability'] = array(
-            '#type' => 'submit',
-            '#value' => t('Manage availability'),
-            '#name' => 'ief-' . $ief_id . '-manage-availability-' . $key,
-            '#limit_validation_errors' => array(),
-            '#submit' => array('tours_single_day_slot_manage_availability'),
-            '#ief_row_delta' => $key,
-            '#unit_id' => $value['#entity']->unit_id,
-          );
+          if (isset($value['#entity']->unit_id) && !empty($value['#entity']->unit_id)) {
+            $element['entities'][$key]['actions']['manage_availability'] = array(
+              '#type' => 'submit',
+              '#value' => t('Manage availability'),
+              '#name' => 'ief-' . $ief_id . '-manage-availability-' . $key,
+              '#limit_validation_errors' => array(),
+              '#submit' => array('tours_single_day_slot_manage_availability'),
+              '#ief_row_delta' => $key,
+              '#unit_id' => $value['#entity']->unit_id,
+            );
+          }
         }
       }
     }
