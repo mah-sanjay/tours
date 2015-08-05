@@ -166,15 +166,24 @@ function tours_field_formatter_view($entity_type, $entity, $field, $instance, $l
         }
 
         if ($unit) {
+          $currency_setting = commerce_currency_load(commerce_default_currency());
+          $currency_symbol = $currency_setting['symbol'];
+
           $unit_names[] = $unit->name;
           $unit_ids[] = $unit->unit_id;
 
           if ($display['settings']['display_calendar']) {
             $form = drupal_get_form('tours_single_day_book_form', $unit);
 
+            $base_price = t('@currency_symbol @amount', array(
+              '@currency_symbol' => $currency_symbol,
+              '@amount' => number_format($unit->base_price, 2, '.', ''),
+            ));
+
             $element[] = array(
               '#theme' => 'tours_availability_single_day',
               'form' => $form,
+              'base_price' => $base_price,
             );
           }
         }
