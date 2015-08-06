@@ -1503,9 +1503,6 @@ function tours_single_day_book_form($form, &$form_state, $tour) {
       $form_state['values']['time'] != '' && $form_state['values']['time'] != '_none') {
     $form['container']['participants']['#disabled'] = FALSE;
 
-    $id = $form_state['values']['time'];
-    $daily_slot = $tour->field_daily_slot[LANGUAGE_NONE][$id]['entity'];
-
     $booking_id = db_select('rooms_bookings', 'b')
                   ->fields('b', array('booking_id'))
                   ->condition('booking_status', '0')
@@ -1540,6 +1537,8 @@ function tours_single_day_book_form($form, &$form_state, $tour) {
 
     $currency_setting = commerce_currency_load(commerce_default_currency());
     $currency_symbol = $currency_setting['symbol'];
+
+    $daily_slot = rooms_unit_load($form_state['values']['time']);
 
     $price = t('@currency_symbol @amount', array(
       '@currency_symbol' => $currency_symbol,
