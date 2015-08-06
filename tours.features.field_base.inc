@@ -162,5 +162,31 @@ function tours_field_default_field_bases() {
     'type' => 'tours_availability_reference',
   );
 
+  // Exported field_base: 'field_tours_singleday_reference'
+  $field_bases['field_tours_singleday_reference'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_tours_singleday_reference',
+    'indexes' => array(
+      'unit_id' => array(
+        0 => 'unit_id',
+      ),
+    ),
+    'locked' => 0,
+    'module' => 'tours',
+    'settings' => array(
+      'referenceable_unit_types' => array(
+        'multi_day_tour' => 0,
+        'single_day_tour' => 'single_day_tour',
+        'single_day_tour_slot' => 0,
+        'unit_with_attributes' => 0,
+      ),
+    ),
+    'translatable' => 0,
+    'type' => 'tours_availability_reference',
+  );
+
   return $field_bases;
 }
