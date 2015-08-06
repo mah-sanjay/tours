@@ -172,7 +172,7 @@ function tours_field_default_field_instances() {
         'module' => 'tours',
         'settings' => array(
           'book_now' => 1,
-          'display_calendar' => 0,
+          'display_calendar' => 1,
           'enquire_about' => 1,
         ),
         'type' => 'tours_availability_reference_default',

@@ -1427,7 +1427,7 @@ function tours_single_day_book_form($form, &$form_state, $tour) {
     '#restrictions' => array(
       'allowed_values' => array(
         'type' => 'tours',
-        'tour_id' => '4',
+        'tour_id' => $tour->unit_id,
       ),
     ),
     '#ajax' => array(
