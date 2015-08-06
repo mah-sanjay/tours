@@ -1421,7 +1421,8 @@ function tours_single_day_book_form($form, &$form_state, $tour) {
 
   $form['date'] = array(
     '#title' => t('Select a date'),
-    '#type' => 'datepicker',
+    '#type' => 'date_popup',
+    '#flavour' => 'inline',
     '#date_format' => 'Y-m-d',
     '#datepicker_options' => array('minDate' => '+1d', 'maxDate' => '+1y'),
     '#restrictions' => array(
