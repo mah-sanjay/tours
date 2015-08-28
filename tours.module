@@ -11,6 +11,7 @@ include_once 'tours.features.inc';
  */
 define ('TOURS_SINGLE_DAY', 'single_day_tour');
 define ('TOURS_SINGLE_DAY_SLOT', 'single_day_tour_slot');
+define ('TOURS_PRIVATE_SINGLE_DAY_SLOT', 'private_single_day_tour_slot');
 define ('TOURS_MULTI_DAY', 'multi_day_tour');
 
 define ('ROOMS_PART_BOOKED', 4);
@@ -84,7 +85,7 @@ function tours_entity_presave($entity, $type) {
         }
       }
     }
-    elseif ($entity->type == TOURS_SINGLE_DAY_SLOT) {
+    elseif ($entity->type == TOURS_SINGLE_DAY_SLOT || $entity->type == TOURS_PRIVATE_SINGLE_DAY_SLOT) {
       $entity->default_state = 1;
     }
   }
@@ -411,7 +412,7 @@ function tours_add_tour_instance($form, &$form_state) {
   // Add the tour instance bookings.
   $unit = rooms_unit_load($form_state['values']['unit_id']);
 
-  if ($unit->type == TOURS_SINGLE_DAY_SLOT) {
+  if ($unit->type == TOURS_SINGLE_DAY_SLOT || $unit->type == TOURS_PRIVATE_SINGLE_DAY_SLOT) {
     $start_date = $form_state['values']['rooms_start_date'];
     $end_date = $form_state['values']['rooms_end_date'];
     $end_date = $end_date->modify('+1 day');
@@ -548,7 +549,7 @@ function tours_form_rooms_unit_edit_form_alter(&$form, &$form_state, $form_id) {
     $form['multi']['#access'] = FALSE;
 
     $form['#attached']['css'][] = array(
-      'data' => '.rooms-unit-edit-form .form-wrapper.field-name-field-daily-slot .form-wrapper, .rooms-unit-edit-form .form-wrapper.field-name-field-daily-slot { max-width: 100%; display: inline-block; }',
+      'data' => '.rooms-unit-edit-form .form-wrapper.field-name-field-daily-slot .form-wrapper, .rooms-unit-edit-form .form-wrapper.field-name-field-daily-slot, .rooms-unit-edit-form .form-wrapper.field-name-field-private-daily-slot .form-wrapper, .rooms-unit-edit-form .form-wrapper.field-name-field-private-daily-slot { max-width: 100%; display: inline-block; } .rooms-unit-edit-form .form-wrapper.field-name-field-private-daily-slot { width: 100%; }',
       'type' => 'inline',
     );
   }
@@ -562,7 +563,7 @@ function tours_form_rooms_unit_edit_form_alter(&$form, &$form_state, $form_id) {
 function tours_form_update_availability_calendar_form_alter(&$form, &$form_state, $form_id) {
   $unit = rooms_unit_load($form['rooms_update_availability']['unit_id']['#value']);
 
-  if ($unit->type == TOURS_SINGLE_DAY_SLOT) {
+  if ($unit->type == TOURS_SINGLE_DAY_SLOT || $unit->type == TOURS_PRIVATE_SINGLE_DAY_SLOT) {
     $form['rooms_update_availability']['#title'] = t('Update Time Slot availability');
     $form['rooms_update_availability']['#collapsed'] = FALSE;
 
@@ -1008,7 +1009,7 @@ function tours_rooms_availability_update($response, $events) {
       foreach ($events as $event) {
         if ($event->id == $event_id) {
           $unit = rooms_unit_load($event->unit_id);
-          if ($unit->type == TOURS_SINGLE_DAY_SLOT) {
+          if ($unit->type == TOURS_SINGLE_DAY_SLOT || $unit->type == TOURS_PRIVATE_SINGLE_DAY_SLOT) {
             $unit_id = $unit->field_day_tour[LANGUAGE_NONE][0]['target_id'];
 
             $start_date = $event->start_date;
@@ -1199,7 +1200,7 @@ function tours_availability_page(RoomsUnit $rooms_unit, $year = '', $month = '')
 function tours_get_tour_types($all = FALSE) {
   // Typically we are interested in the multi_day + single day tours, not the single day slots
   if ($all) {
-    return array(TOURS_MULTI_DAY, TOURS_SINGLE_DAY, TOURS_SINGLE_DAY_SLOT);
+    return array(TOURS_MULTI_DAY, TOURS_SINGLE_DAY, TOURS_SINGLE_DAY_SLOT, TOURS_PRIVATE_SINGLE_DAY_SLOT);
   } else {
     return array(TOURS_MULTI_DAY, TOURS_SINGLE_DAY);
   }
@@ -1487,6 +1488,7 @@ function tours_single_day_book_form($form, &$form_state, $tour) {
       $form_state['values']['date'] != '' && $form_state['values']['date'] != '_none') {
     $form['container']['time']['#disabled'] = FALSE;
 
+    // Single-Day Tour Slot
     $single_day_tour_slots = array();
     foreach ($tour->field_daily_slot[LANGUAGE_NONE] as $slot) {
       $single_day_tour_slots[] = $slot['target_id'];
@@ -1510,6 +1512,33 @@ function tours_single_day_book_form($form, &$form_state, $tour) {
 
       if (in_array($daily_slot->unit_id, $available_slots)) {
         $time_options[$daily_slot->unit_id] = $daily_slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value_formatted'] . ' - ' . $daily_slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value2_formatted'];
+      }
+    }
+
+    // Private Single-Day Tour Slot
+    $single_day_private_tour_slots = array();
+    foreach ($tour->field_private_daily_slot[LANGUAGE_NONE] as $slot) {
+      $single_day_private_tour_slots[] = $slot['target_id'];
+    }
+
+    $results = db_select('rooms_bookings', 'b')
+                ->fields('b', array('unit_id'))
+                ->condition('booking_status', '0')
+                ->condition('unit_id', $single_day_private_tour_slots)
+                ->condition('start_date', $form_state['values']['date'])
+                ->execute()
+                ->fetchAll();
+
+    $available_slots = array();
+    foreach ($results as $result) {
+      $available_slots[] = $result->unit_id;
+    }
+
+    foreach ($tour->field_private_daily_slot[LANGUAGE_NONE] as $id => $slot) {
+      $daily_slot = rooms_unit_load($slot['target_id']);
+
+      if (in_array($daily_slot->unit_id, $available_slots)) {
+        $time_options[$daily_slot->unit_id] = $daily_slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value_formatted'] . ' - ' . $daily_slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value2_formatted'] . ' - Private Tour';
       }
     }
 
@@ -1846,7 +1875,7 @@ function tours_availability_reference_autocomplete_validate($element, &$form_sta
  */
 function tours_field_widget_form_alter(&$element, &$form_state, $context) {
   if (isset($element['#field_name'])) {
-    if ($element['#field_name'] == 'field_daily_slot') {
+    if ($element['#field_name'] == 'field_daily_slot' || $element['#field_name'] == 'field_private_daily_slot') {
       $ief_id = $element['#ief_id'];
 
       foreach ($element['entities'] as $key => $value) {

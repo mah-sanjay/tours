@@ -46,6 +46,9 @@ function tours_allowed_values_page_callback($type, $remitter, $year, $month) {
   foreach ($single_day_tour->field_daily_slot[LANGUAGE_NONE] as $slot) {
     $single_day_tour_slots[] = $slot['target_id'];
   }
+  foreach ($single_day_tour->field_private_daily_slot[LANGUAGE_NONE] as $slot) {
+    $single_day_tour_slots[] = $slot['target_id'];
+  }
 
   $booking_ids = rooms_booking_ids(array('unit_id' => $single_day_tour_slots, 'booking_status' => '0'));
 
