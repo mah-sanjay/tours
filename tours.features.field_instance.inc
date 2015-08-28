@@ -358,46 +358,6 @@ function tours_field_default_field_instances() {
   );
 
   // Exported field_instance:
-  // 'rooms_unit-single_day_tour-field_tours_singleday_reference'
-  $field_instances['rooms_unit-single_day_tour-field_tours_singleday_reference'] = array(
-    'bundle' => 'single_day_tour',
-    'default_value' => NULL,
-    'deleted' => 0,
-    'description' => '',
-    'display' => array(
-      'default' => array(
-        'label' => 'above',
-        'module' => 'tours',
-        'settings' => array(
-          'book_now' => 1,
-          'display_calendar' => 1,
-          'enquire_about' => 1,
-        ),
-        'type' => 'tours_availability_reference_default',
-        'weight' => 2,
-      ),
-    ),
-    'entity_type' => 'rooms_unit',
-    'field_name' => 'field_tours_singleday_reference',
-    'label' => 'Tours Reference',
-    'required' => 0,
-    'settings' => array(
-      'user_register_form' => FALSE,
-    ),
-    'widget' => array(
-      'active' => 0,
-      'module' => 'tours',
-      'settings' => array(
-        'autocomplete_match' => 'contains',
-        'autocomplete_path' => 'tours_availability_reference/autocomplete',
-        'size' => 60,
-      ),
-      'type' => 'tours_availability_reference_autocomplete',
-      'weight' => 2,
-    ),
-  );
-
-  // Exported field_instance:
   // 'rooms_unit-single_day_tour-rooms_booking_unit_options'
   $field_instances['rooms_unit-single_day_tour-rooms_booking_unit_options'] = array(
     'bundle' => 'single_day_tour',

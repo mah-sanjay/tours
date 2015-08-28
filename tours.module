@@ -508,8 +508,17 @@ function tours_form_rooms_unit_type_form_alter(&$form, &$form_state, $form_id) {
  *
  * FORM_ID = rooms_unit_edit_form_alter
  */
-function tours_form_rooms_unit_edit_form_alter(&$form, &$form_state, $form_id){
+function tours_form_rooms_unit_edit_form_alter(&$form, &$form_state, $form_id) {
   $tour_types = tours_get_tour_types();
+
+  if ($form['#entity']->type == TOURS_SINGLE_DAY) {
+    $form['base_price']['#field_suffix'] = 'per person';
+
+    $form['field_daily_slot']['und']['#title'] = '';
+    $form['field_daily_slot']['und']['actions']['ief_add']['#value'] = t('Add time slot');
+
+    $form['availability']['default_state']['#default_value'] = 0;
+  }
 
   if (in_array($form['#entity']->type, $tour_types)) {
     // Change Unit Name to Tour Name.
@@ -532,7 +541,7 @@ function tours_form_rooms_unit_edit_form_alter(&$form, &$form_state, $form_id){
     $form['multi']['#access'] = FALSE;
 
     $form['#attached']['css'][] = array(
-      'data' => '.rooms-unit-edit-form .form-wrapper.field-name-field-daily-slot .form-wrapper, .rooms-unit-edit-form .form-wrapper.field-name-field-daily-slot { max-width: 100%; }',
+      'data' => '.rooms-unit-edit-form .form-wrapper.field-name-field-daily-slot .form-wrapper, .rooms-unit-edit-form .form-wrapper.field-name-field-daily-slot { max-width: 100%; display: inline-block; }',
       'type' => 'inline',
     );
   }

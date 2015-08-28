@@ -179,9 +179,9 @@ function tours_field_default_field_bases() {
     'settings' => array(
       'referenceable_unit_types' => array(
         'multi_day_tour' => 0,
+        'private_single_day_tour_slot' => 0,
         'single_day_tour' => 'single_day_tour',
         'single_day_tour_slot' => 0,
-        'unit_with_attributes' => 0,
       ),
     ),
     'translatable' => 0,
