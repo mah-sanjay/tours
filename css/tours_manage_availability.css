@@ -22,6 +22,10 @@
   margin-top: 0;
 }
 
+#edit-reset {
+  margin-left: 80px;
+}
+
 /* Fix for "Shiny" theme */
 .form-type-date-repeat-form-element-radios input[type="radio"] {
 	opacity: 1;

@@ -56,6 +56,7 @@ function tours_theme() {
 function tours_entity_presave($entity, $type) {
   if ($type == 'rooms_unit') {
     if ($entity->type == TOURS_SINGLE_DAY) {
+      // Single-Day Tour Slot
       if (isset($entity->field_daily_slot[LANGUAGE_NONE])) {
         foreach ($entity->field_daily_slot[LANGUAGE_NONE] as $slot_id) {
           $slot = rooms_unit_load($slot_id['target_id']);
@@ -84,6 +85,36 @@ function tours_entity_presave($entity, $type) {
           rooms_unit_save($slot);
         }
       }
+
+      // Private Single-Day Tour Slot
+      if (isset($entity->field_private_daily_slot[LANGUAGE_NONE])) {
+        foreach ($entity->field_private_daily_slot[LANGUAGE_NONE] as $slot_id) {
+          $slot = rooms_unit_load($slot_id['target_id']);
+
+          // Base price of the Single-Day Tour Slot is the same as the Single-Day Tour.
+          $slot->base_price = $entity->base_price;
+
+          // The Title of the Single-Day Tour Slot is the same Title as the Single-Day Tour Bookable Unit
+          // it is associated with + the start and end time of the tour.
+          if ($slot->name == '') {
+            $time_format = array(
+              'separator' => ':',
+              'period_separator' => '',
+              'period' => 'a',
+              'hour' => 'g',
+              'minute' => 'i'
+            );
+
+            $start_time = timefield_integer_to_time($time_format, $slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value']);
+
+            $end_time = timefield_integer_to_time($time_format, $slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value2']);
+
+            $slot->name = $entity->name . ' (' . $start_time . ' - ' . $end_time . ') - Private tour';
+          }
+
+          rooms_unit_save($slot);
+        }
+      }
     }
     elseif ($entity->type == TOURS_SINGLE_DAY_SLOT || $entity->type == TOURS_PRIVATE_SINGLE_DAY_SLOT) {
       $entity->default_state = 1;
@@ -103,7 +134,7 @@ function tours_field_info() {
         'referenceable_unit_types' => array(),
       ),
       'default_widget' => 'tours_availability_reference_autocomplete',
-      'default_formatter' => 'tours_availability_reference_default',
+      'default_formatter' => 'tours_multiday_availability_reference_default',
     ),
   );
 }
@@ -120,11 +151,17 @@ function tours_field_is_empty($item, $field) {
  */
 function tours_field_formatter_info() {
   $ret = array(
-    'tours_availability_reference_default' => array(
-      'label' => t('Tours Availability Calendar'),
+    'tours_multiday_availability_reference_default' => array(
+      'label' => t('Multi-day Availability Calendar'),
       'description' => t('Displays availability information on a calendar.'),
       'field types' => array('tours_availability_reference', 'entityreference'),
-      'settings' => array('book_now' => '1', 'enquire_about' => '1', 'display_calendar' => '0'),
+      'settings' => array('book_now' => '1', 'enquire_about' => '1'),
+    ),
+    'tours_singleday_availability_reference_default' => array(
+      'label' => t('Single-day Availability Calendar'),
+      'description' => t('Displays availability information on a calendar.'),
+      'field types' => array('tours_availability_reference', 'entityreference'),
+      'settings' => array('enquire_about' => '1', 'display_calendar' => '0'),
     ),
   );
   return $ret;
@@ -150,7 +187,7 @@ function tours_field_formatter_view($entity_type, $entity, $field, $instance, $l
   $element = array();
 
   switch ($display['type']) {
-    case 'tours_availability_reference_default':
+    case 'tours_multiday_availability_reference_default':
 
       $unit_names = array();
       $unit_ids = array();
@@ -172,30 +209,51 @@ function tours_field_formatter_view($entity_type, $entity, $field, $instance, $l
           $unit_names[] = $unit->name;
           $unit_ids[] = $unit->unit_id;
 
-          if ($display['settings']['display_calendar']) {
-            $form = drupal_get_form('tours_single_day_book_form', $unit);
-
-            $base_price = t('@currency_symbol @amount', array(
-              '@currency_symbol' => $currency_symbol,
-              '@amount' => number_format($unit->base_price, 2, '.', ''),
-            ));
-
-            $element[] = array(
-              '#theme' => 'tours_availability_single_day',
-              'form' => $form,
-              'base_price' => $base_price,
-            );
+          foreach ($unit_ids as $unit_id) {
+            $booking_ids = rooms_booking_ids(array('unit_id' => $unit_id));
           }
         }
       }
 
-      if (!$display['settings']['display_calendar']) {
-        foreach ($unit_ids as $unit_id) {
-          $booking_ids = rooms_booking_ids(array('unit_id' => $unit_id));
+      break;
+
+    case 'tours_singleday_availability_reference_default':
+      $unit_names = array();
+      $unit_ids = array();
+      foreach ($items as $delta => $item) {
+        if ($field['type'] == 'entityreference') {
+          if (empty($item['access'])) {
+            continue;
+          }
+          $unit = ($item['entity']);
+        }
+        else {
+          $unit = rooms_unit_load($item['unit_id']);
+        }
+
+        if ($unit) {
+          $currency_setting = commerce_currency_load(commerce_default_currency());
+          $currency_symbol = $currency_setting['symbol'];
+
+          $unit_names[] = $unit->name;
+          $unit_ids[] = $unit->unit_id;
+
+          $form = drupal_get_form('tours_single_day_book_form', $unit);
+
+          $base_price = t('@currency_symbol @amount', array(
+            '@currency_symbol' => $currency_symbol,
+            '@amount' => number_format($unit->base_price, 2, '.', ''),
+          ));
+
+          $element[] = array(
+            '#theme' => 'tours_availability_single_day',
+            'form' => $form,
+            'base_price' => $base_price,
+          );
         }
       }
 
-    break;
+      break;
   }
 
   if (!empty($booking_ids)) {
@@ -327,11 +385,13 @@ function tours_field_formatter_settings_form($field, $instance, $view_mode, $for
   $display = $instance['display'][$view_mode];
   $settings = $display['settings'];
 
-  $element['book_now'] = array(
-    '#title' => t('Display "Book now"'),
-    '#type' => 'checkbox',
-    '#default_value' => $settings['book_now'],
-  );
+  if ($instance['display'][$view_mode]['type'] == 'tours_multiday_availability_reference_default') {
+    $element['book_now'] = array(
+      '#title' => t('Display "Book now"'),
+      '#type' => 'checkbox',
+      '#default_value' => $settings['book_now'],
+    );
+  }
 
   $element['enquire_about'] = array(
     '#title' => t('Display "Enquire about this Tour"'),
@@ -339,11 +399,13 @@ function tours_field_formatter_settings_form($field, $instance, $view_mode, $for
     '#default_value' => $settings['enquire_about'],
   );
 
-  $element['display_calendar'] = array(
-    '#title' => t('Display as calendar'),
-    '#type' => 'checkbox',
-    '#default_value' => $settings['display_calendar'],
-  );
+  if ($instance['display'][$view_mode]['type'] == 'tours_singleday_availability_reference_default') {
+    $element['display_calendar'] = array(
+      '#title' => t('Display as calendar'),
+      '#type' => 'checkbox',
+      '#default_value' => $settings['display_calendar'],
+    );
+  }
 
   return $element;
 }
@@ -356,10 +418,14 @@ function tours_field_formatter_settings_summary($field, $instance, $view_mode) {
   $settings = $display['settings'];
 
   $summary = array();
-
-  $summary[] = ($settings['book_now']) ? 'Display "Book now"' : 'Don\'t display "Book now"';
+  
+  if ($instance['display'][$view_mode]['type'] == 'tours_multiday_availability_reference_default') {
+    $summary[] = ($settings['book_now']) ? 'Display "Book now"' : 'Don\'t display "Book now"';
+  }
   $summary[] = ($settings['enquire_about']) ? 'Display "Enquire about this Tour"' : 'Don\'t display "Enquire about this Tour"';
-  $summary[] = ($settings['display_calendar']) ? 'Display as calendar' : 'Don\'t display as calendar';
+  if ($instance['display'][$view_mode]['type'] == 'tours_singleday_availability_reference_default') {
+    $summary[] = ($settings['display_calendar']) ? 'Display as calendar' : 'Don\'t display as calendar';
+  }
 
   return implode('<br />', $summary);
 }
