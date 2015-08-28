@@ -59,8 +59,7 @@ function tours_entity_presave($entity, $type) {
         foreach ($entity->field_daily_slot[LANGUAGE_NONE] as $slot_id) {
           $slot = rooms_unit_load($slot_id['target_id']);
 
-          // Max sleeps and Base price of the Single-Day Tour Slot are the same as the Single-Day Tour
-          $slot->max_sleeps = $entity->max_sleeps;
+          // Base price of the Single-Day Tour Slot is the same as the Single-Day Tour.
           $slot->base_price = $entity->base_price;
 
           // The Title of the Single-Day Tour Slot is the same Title as the Single-Day Tour Bookable Unit
@@ -503,6 +502,11 @@ function tours_form_rooms_unit_type_form_alter(&$form, &$form_state, $form_id) {
   $unit_type = $form_state['rooms_unit_type'];
 }
 
+function tours_form_alter(&$form, &$form_state, $form_id) {
+  //dpm($form_id);
+  //dpm($form);
+}
+
 /**
  * Implements hook_form_FORM_ID_alter().
  *
@@ -556,6 +560,9 @@ function tours_form_update_availability_calendar_form_alter(&$form, &$form_state
   $unit = rooms_unit_load($form['rooms_update_availability']['unit_id']['#value']);
 
   if ($unit->type == TOURS_SINGLE_DAY_SLOT) {
+    $form['rooms_update_availability']['#title'] = t('Update Time Slot availability');
+    $form['rooms_update_availability']['#collapsed'] = FALSE;
+
     $form['rooms_update_availability']['actions']['submit']['#value'] = t('Add Instances');
     $form['rooms_update_availability']['actions']['submit']['#submit'][0] = 'tours_add_instances_form_submit';
 
@@ -1853,4 +1860,25 @@ function tours_single_day_slot_manage_availability($form, &$form_state) {
   $unit_id = $form_state['triggering_element']['#unit_id'];
 
   $form_state['redirect'] = 'admin/rooms/units/unit/' . $unit_id . '/availability';
+}
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function tours_menu_local_tasks_alter(&$data, $router_item, $root_path) {
+  if ($root_path == 'admin/rooms/units/unit/%/availability' || $root_path == 'admin/rooms/units/unit/%/pricing') {
+    if (isset($router_item['page_arguments'][0]->type)) {
+      if ($router_item['page_arguments'][0]->type == TOURS_SINGLE_DAY_SLOT) {
+        // Add a 'Back to Tour' tab that links back to the parent single day tour edit page.
+        $tour_slot = rooms_unit_load(arg(4));
+        $day_tour = $tour_slot->field_day_tour['und'][0]['target_id'];
+
+        $data['tabs'][0]['output'][0]['#link']['title'] = t('Back to Tour');
+        $data['tabs'][0]['output'][0]['#link']['href'] = 'admin/rooms/units/unit/' . $day_tour . '/edit';
+
+        // Remove 'edit' tab.
+        unset($data['tabs'][0]['output'][1]);
+      }
+    }
+  }
 }
