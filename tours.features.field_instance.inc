@@ -359,6 +359,50 @@ function tours_field_default_field_instances() {
   );
 
   // Exported field_instance:
+  // 'rooms_unit-single_day_tour-field_private_daily_slot'
+  $field_instances['rooms_unit-single_day_tour-field_private_daily_slot'] = array(
+    'bundle' => 'single_day_tour',
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'entityreference',
+        'settings' => array(
+          'link' => FALSE,
+        ),
+        'type' => 'entityreference_label',
+        'weight' => 2,
+      ),
+    ),
+    'entity_type' => 'rooms_unit',
+    'field_name' => 'field_private_daily_slot',
+    'label' => 'Private Daily Slot',
+    'required' => 0,
+    'settings' => array(
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'inline_entity_form',
+      'settings' => array(
+        'fields' => array(),
+        'type_settings' => array(
+          'allow_existing' => 0,
+          'allow_new' => 1,
+          'delete_references' => 0,
+          'label_plural' => 'private time slots',
+          'label_singular' => 'private time slot',
+          'match_operator' => 'CONTAINS',
+          'override_labels' => 1,
+        ),
+      ),
+      'type' => 'inline_entity_form',
+      'weight' => 2,
+    ),
+  );
+
+  // Exported field_instance:
   // 'rooms_unit-single_day_tour-rooms_booking_unit_options'
   $field_instances['rooms_unit-single_day_tour-rooms_booking_unit_options'] = array(
     'bundle' => 'single_day_tour',
@@ -553,6 +597,7 @@ function tours_field_default_field_instances() {
   t('Day Tour');
   t('Day Tour Time Slot');
   t('Options');
+  t('Private Daily Slot');
   t('Tour Orders');
   t('Tours Reference');
   t('Variable Pricing');

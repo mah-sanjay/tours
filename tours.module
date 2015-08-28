@@ -521,6 +521,9 @@ function tours_form_rooms_unit_edit_form_alter(&$form, &$form_state, $form_id) {
     $form['field_daily_slot']['und']['#title'] = '';
     $form['field_daily_slot']['und']['actions']['ief_add']['#value'] = t('Add time slot');
 
+    $form['field_private_daily_slot']['und']['#title'] = '';
+    $form['field_private_daily_slot']['und']['actions']['ief_add']['#value'] = t('Add private time slot');
+
     $form['availability']['default_state']['#default_value'] = 0;
   }
 
