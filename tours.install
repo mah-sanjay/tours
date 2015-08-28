@@ -36,6 +36,10 @@ function tours_enable() {
 
   // Set "Price calculation" as "Per person per night"
   variable_set('rooms_price_calculation', ROOMS_PER_PERSON);
+
+  // Set "Calendar Events Display Mode" as "Display events occupying full day box
+  // at start and ending on day of last night (day before check-out date)"
+  variable_set('rooms_calendar_events_view', '1');
 }
 
 /**
@@ -79,4 +83,11 @@ function tours_field_schema($field) {
  */
 function tours_update_7001() {
   variable_set('rooms_price_calculation', ROOMS_PER_PERSON);
+}
+
+/**
+ * Set "Calendar Events Display Mode" as "Display events occupying full day box at start and ending on day of last night (day before check-out date)"
+ */
+function tours_update_7002() {
+  variable_set('rooms_calendar_events_view', '1');
 }
