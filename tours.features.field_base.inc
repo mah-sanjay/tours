@@ -188,5 +188,50 @@ function tours_field_default_field_bases() {
     'type' => 'tours_availability_reference',
   );
 
+  // Exported field_base: 'field_variable_pricing'
+  $field_bases['field_variable_pricing'] = array(
+    'active' => 1,
+    'cardinality' => 1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'field_variable_pricing',
+    'indexes' => array(),
+    'locked' => 0,
+    'module' => 'double_field',
+    'settings' => array(
+      'first' => array(
+        'maxlength' => 255,
+        'precision' => 10,
+        'scale' => 2,
+        'size' => 'normal',
+        'type' => 'int',
+      ),
+      'second' => array(
+        'maxlength' => 255,
+        'precision' => 10,
+        'scale' => 2,
+        'size' => 'normal',
+        'type' => 'int',
+      ),
+    ),
+    'translatable' => 0,
+    'type' => 'double_field',
+  );
+
+  // Exported field_base: 'rooms_booking_unit_options'
+  $field_bases['rooms_booking_unit_options'] = array(
+    'active' => 1,
+    'cardinality' => -1,
+    'deleted' => 0,
+    'entity_types' => array(),
+    'field_name' => 'rooms_booking_unit_options',
+    'indexes' => array(),
+    'locked' => 0,
+    'module' => 'rooms',
+    'settings' => array(),
+    'translatable' => 0,
+    'type' => 'rooms_options',
+  );
+
   return $field_bases;
 }

@@ -155,6 +155,37 @@ function tours_views_default_views() {
   $handler->display->display_options['tab_options']['description'] = 'A list of all bookings. Bookings can be created, edited or deleted manually or can be created following a purchase from a client';
   $handler->display->display_options['tab_options']['weight'] = '0';
   $handler->display->display_options['tab_options']['name'] = 'management';
+  $translatables['tour_bookings'] = array(
+    t('Master'),
+    t('Tour Bookings'),
+    t('more'),
+    t('Apply'),
+    t('Reset'),
+    t('Sort by'),
+    t('Asc'),
+    t('Desc'),
+    t('Items per page'),
+    t('- All -'),
+    t('Offset'),
+    t('« first'),
+    t('‹ previous'),
+    t('next ›'),
+    t('last »'),
+    t('Bookings referencing Commerce Order from field_tour_orders'),
+    t('Booking unit'),
+    t('Customer profile referenced by commerce_customer_billing'),
+    t('Order ID'),
+    t('Customer name'),
+    t('Start Date'),
+    t('Order status'),
+    t('Edit Tour Instance'),
+    t('<a href="/admin/rooms/bookings/booking/[booking_id]/edit">edit</a>'),
+    t('.'),
+    t('Edit Tour'),
+    t('<a href="/admin/rooms/units/unit/[unit_id]/edit">edit</a>'),
+    t('Order Operations'),
+    t('Page'),
+  );
   $export['tour_bookings'] = $view;
 
   $view = new view();
@@ -319,6 +350,35 @@ function tours_views_default_views() {
   $handler->display->display_options['tab_options']['description'] = 'A list of all bookings. Bookings can be created, edited or deleted manually or can be created using Drupal Commerce.';
   $handler->display->display_options['tab_options']['weight'] = '0';
   $handler->display->display_options['tab_options']['name'] = 'management';
+  $translatables['upcoming_tours'] = array(
+    t('Master'),
+    t('Upcoming Tours'),
+    t('more'),
+    t('Apply'),
+    t('Reset'),
+    t('Sort by'),
+    t('Asc'),
+    t('Desc'),
+    t('Items per page'),
+    t('- All -'),
+    t('Offset'),
+    t('« first'),
+    t('‹ previous'),
+    t('next ›'),
+    t('last »'),
+    t('Empty Message'),
+    t('No bookings have been created yet.'),
+    t('Booking owner'),
+    t('ID'),
+    t('.'),
+    t('Start Date'),
+    t('End Date'),
+    t('Tour'),
+    t('Owner'),
+    t('Operations links'),
+    t('Confirmed'),
+    t('Page'),
+  );
   $export['upcoming_tours'] = $view;
 
   $view = new view();
@@ -412,6 +472,21 @@ function tours_views_default_views() {
 
   /* Display: Block */
   $handler = $view->new_display('block', 'Block', 'block_1');
+  $translatables['upcoming_tours_by_unit'] = array(
+    t('Master'),
+    t('Upcoming Tour Dates'),
+    t('more'),
+    t('Apply'),
+    t('Reset'),
+    t('Sort by'),
+    t('Asc'),
+    t('Desc'),
+    t('Booking unit'),
+    t('.'),
+    t('[start_date] - [end_date]'),
+    t('All'),
+    t('Block'),
+  );
   $export['upcoming_tours_by_unit'] = $view;
 
   return $export;

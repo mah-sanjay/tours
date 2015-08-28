@@ -63,6 +63,21 @@ function tours_default_rooms_unit_type() {
     "rooms_booking_unit_options" : [],
     "rdf_mapping" : []
   }');
+  $items['private_single_day_tour_slot'] = entity_import('rooms_unit_type', '{
+    "type" : "private_single_day_tour_slot",
+    "label" : "Private Single-Day Tour Slot",
+    "weight" : "0",
+    "data" : {
+      "base_price" : "1",
+      "min_sleeps" : "",
+      "max_sleeps" : "",
+      "min_children" : "",
+      "max_children" : "",
+      "rooms_description_source" : ""
+    },
+    "rooms_booking_unit_options" : [],
+    "rdf_mapping" : []
+  }');
   $items['single_day_tour'] = entity_import('rooms_unit_type', '{
     "type" : "single_day_tour",
     "label" : "Single-Day Tour",
