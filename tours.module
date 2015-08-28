@@ -570,6 +570,13 @@ function tours_form_update_availability_calendar_form_alter(&$form, &$form_state
     $form['rooms_update_availability']['actions']['submit']['#value'] = t('Add Instances');
     $form['rooms_update_availability']['actions']['submit']['#submit'][0] = 'tours_add_instances_form_submit';
 
+    $form['rooms_update_availability']['actions']['reset'] = array(
+      '#type' => 'submit',
+      '#value' => t('Reset time slot availability'),
+      '#submit' => array('tours_reset_time_slot_availability'),
+      '#limit_validation_errors' => array(),
+    );
+
     unset($form['#validate']);
     unset($form['rooms_update_availability']['rooms_date_range']);
     unset($form['rooms_update_availability']['unit_state']);
@@ -709,6 +716,29 @@ function tours_form_update_availability_calendar_form_alter(&$form, &$form_state
         ),
       ),
     );
+  }
+}
+
+/**
+ * Submit function for 'Reset time slot availability'.
+ */
+function tours_reset_time_slot_availability($form, &$form_state) {
+  // Delete every booking for that single day tour slot unit
+  // that does not have an order associated with it.
+  $single_day_tour_slot = $form['rooms_update_availability']['unit_id']['#value'];
+
+  $results = db_select('rooms_bookings', 'b')
+                ->fields('b', array('booking_id'))
+                ->condition('unit_id', $single_day_tour_slot)
+                ->execute()
+                ->fetchAllKeyed(0, 0);
+
+  foreach (array_keys($results) as $booking_id) {
+    $booking = rooms_booking_load($booking_id);
+
+    if (empty($booking->field_tour_orders)) {
+      rooms_booking_delete($booking);
+    }
   }
 }
 
