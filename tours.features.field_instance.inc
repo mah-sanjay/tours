@@ -10,6 +10,44 @@
 function tours_field_default_field_instances() {
   $field_instances = array();
 
+  // Exported field_instance:
+  // 'rooms_booking-tour_instance-field_tour_full_booked'
+  $field_instances['rooms_booking-tour_instance-field_tour_full_booked'] = array(
+    'bundle' => 'tour_instance',
+    'default_value' => array(
+      0 => array(
+        'value' => 0,
+      ),
+    ),
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'list',
+        'settings' => array(),
+        'type' => 'list_default',
+        'weight' => 2,
+      ),
+    ),
+    'entity_type' => 'rooms_booking',
+    'field_name' => 'field_tour_full_booked',
+    'label' => 'Full booked',
+    'required' => 0,
+    'settings' => array(
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'options',
+      'settings' => array(
+        'display_label' => 1,
+      ),
+      'type' => 'options_onoff',
+      'weight' => 3,
+    ),
+  );
+
   // Exported field_instance: 'rooms_booking-tour_instance-field_tour_orders'
   $field_instances['rooms_booking-tour_instance-field_tour_orders'] = array(
     'bundle' => 'tour_instance',
@@ -44,6 +82,44 @@ function tours_field_default_field_instances() {
       ),
       'type' => 'entityreference_autocomplete',
       'weight' => 1,
+    ),
+  );
+
+  // Exported field_instance:
+  // 'rooms_booking-tour_instance-field_tour_partially_booked'
+  $field_instances['rooms_booking-tour_instance-field_tour_partially_booked'] = array(
+    'bundle' => 'tour_instance',
+    'default_value' => array(
+      0 => array(
+        'value' => 0,
+      ),
+    ),
+    'deleted' => 0,
+    'description' => '',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'list',
+        'settings' => array(),
+        'type' => 'list_default',
+        'weight' => 1,
+      ),
+    ),
+    'entity_type' => 'rooms_booking',
+    'field_name' => 'field_tour_partially_booked',
+    'label' => 'Partially booked',
+    'required' => 0,
+    'settings' => array(
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'options',
+      'settings' => array(
+        'display_label' => 1,
+      ),
+      'type' => 'options_onoff',
+      'weight' => 2,
     ),
   );
 
@@ -596,7 +672,9 @@ function tours_field_default_field_instances() {
   t('Daily Slot');
   t('Day Tour');
   t('Day Tour Time Slot');
+  t('Full booked');
   t('Options');
+  t('Partially booked');
   t('Private Daily Slot');
   t('Tour Orders');
   t('Tours Reference');

@@ -1079,20 +1079,26 @@ function tours_commerce_checkout_complete($order) {
           $booking->field_tour_orders[LANGUAGE_NONE][]['target_id'] = $order->order_id;
 
           if (tours_booking_free_quantity($booking) <= 0) {
-            $booking->booking_status = 1;
+            $booking->field_tour_partially_booked[LANGUAGE_NONE][0]['value'] = 0;
+            $booking->field_tour_full_booked[LANGUAGE_NONE][0]['value'] = 1;
+          }
+          else {
+            $booking->field_tour_partially_booked[LANGUAGE_NONE][0]['value'] = 1;
+            $booking->field_tour_full_booked[LANGUAGE_NONE][0]['value'] = 0;
           }
 
           rooms_booking_save($booking);
         }
 
         // Set booking to confirmed if minimum occupancy has been reached.
-        /*if (isset($line_item->tours_booked_unit_id)) {
+        if (isset($line_item->tours_booked_unit_id)) {
           $unit = rooms_unit_load($line_item->tours_booked_unit_id[LANGUAGE_NONE][0]['value']);
           if (tours_booking_quantity_booked($booking) >= $unit->min_sleeps) {
             $booking->booking_status = 1;
+
             rooms_booking_save($booking);
           }
-        }*/
+        }
       }
     }
   }
