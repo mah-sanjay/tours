@@ -117,7 +117,7 @@ function tours_entity_presave($entity, $type) {
       }
     }
     elseif ($entity->type == TOURS_SINGLE_DAY_SLOT || $entity->type == TOURS_PRIVATE_SINGLE_DAY_SLOT) {
-      $entity->default_state = 1;
+      $entity->default_state = ROOMS_NOT_AVAILABLE;
     }
   }
 }
