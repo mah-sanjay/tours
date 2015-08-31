@@ -2008,15 +2008,22 @@ function tours_menu_local_tasks_alter(&$data, $router_item, $root_path) {
   if ($root_path == 'admin/rooms/units/unit/%/availability' || $root_path == 'admin/rooms/units/unit/%/pricing') {
     if (isset($router_item['page_arguments'][0]->type)) {
       if ($router_item['page_arguments'][0]->type == TOURS_SINGLE_DAY_SLOT) {
-        // Add a 'Back to Tour' tab that links back to the parent single day tour edit page.
         $tour_slot = rooms_unit_load(arg(4));
         $day_tour = $tour_slot->field_day_tour['und'][0]['target_id'];
 
-        $data['tabs'][0]['output'][0]['#link']['title'] = t('Back to Tour');
-        $data['tabs'][0]['output'][0]['#link']['href'] = 'admin/rooms/units/unit/' . $day_tour . '/edit';
+        if (rooms_unit_access('update', rooms_unit_load($day_tour))) {
+          // Add a 'Back to Tour' tab that links back to the parent single day tour edit page.
+          $data['tabs'][0]['output'][0]['#link']['title'] = t('Back to Tour');
+          $data['tabs'][0]['output'][0]['#link']['href'] = 'admin/rooms/units/unit/' . $day_tour . '/edit';
+        }
+        else {
+          unset($data['tabs'][0]['output'][0]);
+        }
 
-        // Remove 'edit' tab.
-        unset($data['tabs'][0]['output'][1]);
+        if ($data['tabs'][0]['output'][1]['#link']['path'] == 'admin/rooms/units/unit/%/edit') {
+          // Remove 'edit' tab.
+          unset($data['tabs'][0]['output'][1]);
+        }
       }
     }
   }
