@@ -42,7 +42,7 @@ function tours_create_line_item($unit_to_book, AvailabilityAgent $agent, $bookin
   // Product name - we set something that will make sense to the user here.
   $nights = $dd->diff($agent->start_date)->days;
 
-  if ($unit_type->type == 'single_day_tour_slot') {
+  if ($unit_type->type == TOURS_SINGLE_DAY_SLOT || $unit_type->type == TOURS_PRIVATE_SINGLE_DAY_SLOT) {
     $day_tour = rooms_unit_load($unit->field_day_tour[LANGUAGE_NONE][0]['target_id']);
 
     $line_item_label = t('Booking for') . ' "' . $day_tour->name . '" (' . $unit->field_day_tour_time_slot[LANGUAGE_NONE][0]['value_formatted'] . ' - ' . $unit

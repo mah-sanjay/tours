@@ -28,6 +28,7 @@ dependencies[] = tours_faceted_search
 dependencies[] = views
 explanation = Field type(s) in use - see <a href="/admin/reports/fields">Field list</a>
 features[cer][] = rooms_unit:single_day_tour:field_daily_slot*rooms_unit:single_day_tour_slot:field_day_tour
+features[cer][] = rooms_unit:single_day_tour:field_private_daily_slot*rooms_unit:private_single_day_tour_slot:field_day_tour
 features[ctools][] = views:views_default:3.0
 features[features_api][] = api:2
 features[field_base][] = field_daily_slot

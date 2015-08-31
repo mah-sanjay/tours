@@ -1696,10 +1696,56 @@ function tours_single_day_book_form($form, &$form_state, $tour) {
 
     $daily_slot = rooms_unit_load($form_state['values']['time']);
 
-    $price = t('@currency_symbol @amount', array(
-      '@currency_symbol' => $currency_symbol,
-      '@amount' => number_format($daily_slot->base_price * ($form_state['values']['participants'] + 1), 2, '.', ''),
-    ));
+    if ($daily_slot->type == TOURS_PRIVATE_SINGLE_DAY_SLOT) {
+      $temp_price = '';
+      $max_price = '';
+      $max_people = 0;
+      $diff = PHP_INT_MAX;
+
+      $participants = $form_state['values']['participants'] + 1;
+
+      if (isset($daily_slot->field_variable_pricing['und'])) {
+        foreach ($daily_slot->field_variable_pricing['und'] as $pricing) {
+          if ($participants <= $pricing['first']) {
+            if (($pricing['first'] - $participants) < $diff) {
+              $diff = $pricing['first'] - $participants;
+              $temp_price = $pricing['second'];
+            }
+          }
+
+          if ($max_people < $pricing['first']) {
+            $max_people = $pricing['first'];
+            $max_price = $pricing['second'];
+          }
+        }
+      }
+
+      if ($temp_price) {
+        $price = t('@currency_symbol @amount', array(
+          '@currency_symbol' => $currency_symbol,
+          '@amount' => number_format($temp_price, 2, '.', ''),
+        ));
+      }
+      elseif ($max_price) {
+        $price = t('@currency_symbol @amount', array(
+          '@currency_symbol' => $currency_symbol,
+          '@amount' => number_format($max_price, 2, '.', ''),
+        ));
+      }
+      else {
+        $price = t('@currency_symbol @amount', array(
+          '@currency_symbol' => $currency_symbol,
+          '@amount' => number_format($daily_slot->base_price * ($form_state['values']['participants'] + 1), 2, '.', ''),
+        ));
+      }
+    }
+    else {
+      $price = t('@currency_symbol @amount', array(
+        '@currency_symbol' => $currency_symbol,
+        '@amount' => number_format($daily_slot->base_price * ($form_state['values']['participants'] + 1), 2, '.', ''),
+      ));
+    }
+
     $form['container']['price']['#markup'] = '<div class="form-item form-group">' . t('Price') . ': ' . $price . '</div>';
   }
 
@@ -2025,6 +2071,45 @@ function tours_menu_local_tasks_alter(&$data, $router_item, $root_path) {
           unset($data['tabs'][0]['output'][1]);
         }
       }
+    }
+  }
+}
+
+/**
+ * Implements hook_rooms_booking_amount_before_modifiers_alter().
+ */
+function tours_rooms_booking_amount_before_modifiers_alter(&$price, $booking_info) {
+  $unit = $booking_info['unit'];
+
+  if ($unit->type == TOURS_PRIVATE_SINGLE_DAY_SLOT) {
+    $adults = $booking_info['booking_parameters']['group_size'];
+
+    $temp_price = '';
+    $max_price = '';
+    $max_people = 0;
+    $diff = PHP_INT_MAX;
+
+    if (isset($unit->field_variable_pricing['und'])) {
+      foreach ($unit->field_variable_pricing['und'] as $pricing) {
+        if ($adults <= $pricing['first']) {
+          if (($pricing['first'] - $adults) < $diff) {
+            $diff = $pricing['first'] - $adults;
+            $temp_price = $pricing['second'];
+          }
+        }
+
+        if ($max_people < $pricing['first']) {
+          $max_people = $pricing['first'];
+          $max_price = $pricing['second'];
+        }
+      }
+    }
+
+    if ($temp_price) {
+      $price = $temp_price;
+    }
+    elseif ($max_price) {
+      $price = $max_price;
     }
   }
 }

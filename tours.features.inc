@@ -18,6 +18,15 @@ function tours_default_cer() {
     "cer_right" : { "und" : [ { "path" : "rooms_unit:single_day_tour_slot:field_day_tour" } ] },
     "rdf_mapping" : []
   }');
+  $items['rooms_unit:single_day_tour:field_private_daily_slot*rooms_unit:private_single_day_tour_slot:field_day_tour'] = entity_import('cer', '{
+    "identifier" : "rooms_unit:single_day_tour:field_private_daily_slot*rooms_unit:private_single_day_tour_slot:field_day_tour",
+    "cer_bidirectional" : { "und" : [ { "value" : "1" } ] },
+    "cer_enabled" : { "und" : [ { "value" : "1" } ] },
+    "cer_weight" : { "und" : [ { "value" : "0" } ] },
+    "cer_left" : { "und" : [ { "path" : "rooms_unit:single_day_tour:field_private_daily_slot" } ] },
+    "cer_right" : { "und" : [ { "path" : "rooms_unit:private_single_day_tour_slot:field_day_tour" } ] },
+    "rdf_mapping" : []
+  }');
   return $items;
 }
 
