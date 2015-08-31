@@ -62,7 +62,7 @@ function tours_field_default_field_instances() {
           'display_calendar' => 0,
           'enquire_about' => 1,
         ),
-        'type' => 'tours_availability_reference_default',
+        'type' => 'tours_multiday_availability_reference_default',
         'weight' => 1,
       ),
     ),
@@ -257,19 +257,19 @@ function tours_field_default_field_instances() {
       'settings' => array(
         'first' => array(
           'general' => array(
-            'prefix' => '',
+            'prefix' => '<label>Number of participants:</label>',
             'required' => 1,
             'suffix' => '',
           ),
           'textfield' => array(
             'placeholder' => '',
-            'size' => 10,
+            'size' => 5,
           ),
         ),
         'inline' => 1,
         'second' => array(
           'general' => array(
-            'prefix' => '',
+            'prefix' => '<label>Total tour Price:</label>',
             'required' => 1,
             'suffix' => '',
           ),
