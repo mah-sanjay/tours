@@ -641,6 +641,8 @@ function tours_form_update_availability_calendar_form_alter(&$form, &$form_state
       '#value' => t('Reset time slot availability'),
       '#submit' => array('tours_reset_time_slot_availability'),
       '#limit_validation_errors' => array(),
+      '#prefix' => '<div class="button-reset">',
+      '#suffix' => '<p>' . t('This will delete all time slot instances that do not have a booking associated with them.') . '</p></div>',
     );
 
     unset($form['#validate']);

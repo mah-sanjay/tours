@@ -21,9 +21,9 @@
 .rooms-management-form .form-actions input {
   margin-top: 0;
 }
-
-#edit-reset {
-  margin-left: 80px;
+.rooms-management-form .button-reset {
+  float: right;
+  margin-left: 100px;
 }
 
 /* Fix for "Shiny" theme */
