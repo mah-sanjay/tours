@@ -249,6 +249,7 @@ function tours_field_formatter_view($entity_type, $entity, $field, $instance, $l
             '#theme' => 'tours_availability_single_day',
             'form' => $form,
             'base_price' => $base_price,
+            'settings' => $display['settings'],
           );
         }
       }
