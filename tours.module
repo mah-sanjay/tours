@@ -581,7 +581,7 @@ function tours_form_alter(&$form, &$form_state, $form_id) {
  * FORM_ID = rooms_unit_edit_form_alter
  */
 function tours_form_rooms_unit_edit_form_alter(&$form, &$form_state, $form_id) {
-  $tour_types = tours_get_tour_types();
+  $tour_types = tours_get_tour_types(TRUE);
 
   if ($form['#entity']->type == TOURS_SINGLE_DAY) {
     $form['base_price']['#field_suffix'] = 'per person';
@@ -596,6 +596,9 @@ function tours_form_rooms_unit_edit_form_alter(&$form, &$form_state, $form_id) {
   }
 
   if (in_array($form['#entity']->type, $tour_types)) {
+    // Hide "Options".
+    $form['rooms_booking_unit_options']['#access'] = FALSE;
+
     // Change Unit Name to Tour Name.
     $form['name']['#title'] = t('Tour Name');
 
@@ -604,6 +607,7 @@ function tours_form_rooms_unit_edit_form_alter(&$form, &$form_state, $form_id) {
 
     // Guest capacity is going to stand in for Tour Capacity
     $form['guest_capacity']['#title'] = t('Tour Capacity');
+    $form['guest_capacity']['#suffix'] = '<div style="clear: both;"></div>';
     $form['guest_capacity']['max_sleeps']['#description'] =
       t('The total number of people that can participate in the tour. The minimum
        number represents the minimum amount required for the tour to take place');
