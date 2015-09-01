@@ -123,45 +123,6 @@ function tours_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'rooms_unit-multi_day_tour-field_tours_reference'
-  $field_instances['rooms_unit-multi_day_tour-field_tours_reference'] = array(
-    'bundle' => 'multi_day_tour',
-    'default_value' => NULL,
-    'deleted' => 0,
-    'description' => '',
-    'display' => array(
-      'default' => array(
-        'label' => 'above',
-        'module' => 'tours',
-        'settings' => array(
-          'book_now' => 1,
-          'display_calendar' => 0,
-          'enquire_about' => 1,
-        ),
-        'type' => 'tours_multiday_availability_reference_default',
-        'weight' => 1,
-      ),
-    ),
-    'entity_type' => 'rooms_unit',
-    'field_name' => 'field_tours_reference',
-    'label' => 'Tours Reference',
-    'required' => 0,
-    'settings' => array(
-      'user_register_form' => FALSE,
-    ),
-    'widget' => array(
-      'active' => 0,
-      'module' => 'tours',
-      'settings' => array(
-        'autocomplete_match' => 'contains',
-        'autocomplete_path' => 'tours_availability_reference/autocomplete',
-        'size' => 60,
-      ),
-      'type' => 'tours_availability_reference_autocomplete',
-      'weight' => 1,
-    ),
-  );
-
   // Exported field_instance:
   // 'rooms_unit-multi_day_tour-rooms_booking_unit_options'
   $field_instances['rooms_unit-multi_day_tour-rooms_booking_unit_options'] = array(
@@ -677,7 +638,6 @@ function tours_field_default_field_instances() {
   t('Partially booked');
   t('Private Daily Slot');
   t('Tour Orders');
-  t('Tours Reference');
   t('Variable Pricing');
 
   return $field_instances;

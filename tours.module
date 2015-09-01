@@ -127,14 +127,23 @@ function tours_entity_presave($entity, $type) {
  */
 function tours_field_info() {
   return array(
-    'tours_availability_reference' => array(
-      'label' => t('Tours Availability Reference'),
+    'multiday_availability_reference' => array(
+      'label' => t('Multi-day Tours Availability Reference'),
       'description' => t('Display availability information embedded from other fieldable content.'),
       'settings' => array(
         'referenceable_unit_types' => array(),
       ),
       'default_widget' => 'tours_availability_reference_autocomplete',
       'default_formatter' => 'tours_multiday_availability_reference_default',
+    ),
+    'singleday_availability_reference' => array(
+      'label' => t('Single-day Tours Availability Reference'),
+      'description' => t('Display availability information embedded from other fieldable content.'),
+      'settings' => array(
+        'referenceable_unit_types' => array(),
+      ),
+      'default_widget' => 'tours_availability_reference_autocomplete',
+      'default_formatter' => 'tours_singleday_availability_reference_default',
     ),
   );
 }
@@ -154,14 +163,14 @@ function tours_field_formatter_info() {
     'tours_multiday_availability_reference_default' => array(
       'label' => t('Multi-day Availability Calendar'),
       'description' => t('Displays availability information on a calendar.'),
-      'field types' => array('tours_availability_reference', 'entityreference'),
-      'settings' => array('book_now' => '1', 'enquire_about' => '1'),
+      'field types' => array('multiday_availability_reference', 'entityreference'),
+      'settings' => array(),
     ),
     'tours_singleday_availability_reference_default' => array(
       'label' => t('Single-day Availability Calendar'),
       'description' => t('Displays availability information on a calendar.'),
-      'field types' => array('tours_availability_reference', 'entityreference'),
-      'settings' => array('enquire_about' => '1', 'display_calendar' => '0'),
+      'field types' => array('singleday_availability_reference', 'entityreference'),
+      'settings' => array(),
     ),
   );
   return $ret;
@@ -249,7 +258,7 @@ function tours_field_formatter_view($entity_type, $entity, $field, $instance, $l
             '#theme' => 'tours_availability_single_day',
             'form' => $form,
             'base_price' => $base_price,
-            'settings' => $display['settings'],
+            'settings' => $unit->data['display'],
           );
         }
       }
@@ -266,6 +275,8 @@ function tours_field_formatter_view($entity_type, $entity, $field, $instance, $l
     $currency_symbol = $currency_setting['symbol'];
 
     foreach ($bookings as $booking) {
+      $unit = rooms_unit_load($booking->unit_id);
+
       // Ensure start date is good based on the rooms_booking_start_date variable.
       $now = new DateTime();
       $diff1 = $now->setTime(0, 0, 0)->diff($booking->start_date_object);
@@ -278,7 +289,7 @@ function tours_field_formatter_view($entity_type, $entity, $field, $instance, $l
           'end_date' => $booking->end_date_object->format('Y-m-d'),
           'price' => t('@currency_symbol @amount', array('@currency_symbol' => $currency_symbol, '@amount' => number_format($booking->price / 100, 2, '.', ''))),
           'book_now' => drupal_get_form('tours_book_now_form_' . $booking->booking_id, $booking),
-          'settings' => $display['settings'],
+          'settings' => $unit->data['display'],
         );
       }
     }
@@ -304,13 +315,6 @@ function tours_field_settings_form($field, $instance, $has_data) {
   $settings = $field['settings'];
 
   $form = array();
-  $form['referenceable_unit_types'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Unit types that can be referenced'),
-    '#multiple' => TRUE,
-    '#default_value' => isset($settings['referenceable_unit_types']) ? $settings['referenceable_unit_types'] : array(),
-    '#options' => array_map('check_plain', rooms_unit_types_ids()),
-  );
 
   return $form;
 
@@ -349,7 +353,7 @@ function tours_field_widget_info() {
     'tours_availability_reference_autocomplete' => array(
       'label'       => t('Autocomplete text field'),
       'description' => t('Display the list of referenceable units as a textfield with autocomplete behaviour.'),
-      'field types' => array('tours_availability_reference'),
+      'field types' => array('multiday_availability_reference', 'singleday_availability_reference'),
       'settings'    => array(
         'autocomplete_match' => 'contains',
         'size' => 60,
@@ -386,29 +390,7 @@ function tours_field_formatter_settings_form($field, $instance, $view_mode, $for
   $display = $instance['display'][$view_mode];
   $settings = $display['settings'];
 
-  if ($instance['display'][$view_mode]['type'] == 'tours_multiday_availability_reference_default') {
-    $element['book_now'] = array(
-      '#title' => t('Display "Book now"'),
-      '#type' => 'checkbox',
-      '#default_value' => $settings['book_now'],
-    );
-  }
-
-  $element['enquire_about'] = array(
-    '#title' => t('Display "Enquire about this Tour"'),
-    '#type' => 'checkbox',
-    '#default_value' => $settings['enquire_about'],
-  );
-
-  if ($instance['display'][$view_mode]['type'] == 'tours_singleday_availability_reference_default') {
-    $element['display_calendar'] = array(
-      '#title' => t('Display as calendar'),
-      '#type' => 'checkbox',
-      '#default_value' => $settings['display_calendar'],
-    );
-  }
-
-  return $element;
+  return array();
 }
 
 /**
@@ -420,14 +402,6 @@ function tours_field_formatter_settings_summary($field, $instance, $view_mode) {
 
   $summary = array();
   
-  if ($instance['display'][$view_mode]['type'] == 'tours_multiday_availability_reference_default') {
-    $summary[] = ($settings['book_now']) ? 'Display "Book now"' : 'Don\'t display "Book now"';
-  }
-  $summary[] = ($settings['enquire_about']) ? 'Display "Enquire about this Tour"' : 'Don\'t display "Enquire about this Tour"';
-  if ($instance['display'][$view_mode]['type'] == 'tours_singleday_availability_reference_default') {
-    $summary[] = ($settings['display_calendar']) ? 'Display as calendar' : 'Don\'t display as calendar';
-  }
-
   return implode('<br />', $summary);
 }
 
@@ -596,6 +570,27 @@ function tours_form_rooms_unit_edit_form_alter(&$form, &$form_state, $form_id) {
     $form['field_private_daily_slot']['und']['actions']['ief_add']['#value'] = t('Add private time slot');
 
     $form['availability']['default_state']['#default_value'] = 0;
+
+    $form['display'] = array(
+      '#type' => 'fieldset',
+      '#group' => 'additional_settings',
+      '#title' => t('Display'),
+      '#tree' => TRUE,
+      '#weight' => 80,
+    );
+
+    $form['display']['calendar'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Show Calendar'),
+      '#default_value' => (isset($form['#entity']->data['display']['calendar'])) ? $form['#entity']->data['display']['calendar'] : 1,
+    );
+    $form['display']['enquiry'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Allow Enquiries'),
+      '#default_value' => (isset($form['#entity']->data['display']['enquiry'])) ? $form['#entity']->data['display']['enquiry'] : 1,
+    );
+
+    $form['actions']['submit']['#submit'][] = 'tours_form_rooms_unit_edit_form_submit';
   }
 
   if (in_array($form['#entity']->type, $tour_types)) {
@@ -627,6 +622,40 @@ function tours_form_rooms_unit_edit_form_alter(&$form, &$form_state, $form_id) {
       'type' => 'inline',
     );
   }
+
+  if ($form['#entity']->type == TOURS_MULTI_DAY) {
+    $form['display'] = array(
+      '#type' => 'fieldset',
+      '#group' => 'additional_settings',
+      '#title' => t('Display'),
+      '#tree' => TRUE,
+      '#weight' => 80,
+    );
+
+    $form['display']['instant_book'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Allow instant bookings'),
+      '#default_value' => (isset($form['#entity']->data['display']['instant_book'])) ? $form['#entity']->data['display']['instant_book'] : 1,
+    );
+    $form['display']['enquiry'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Allow enquiries'),
+      '#default_value' => (isset($form['#entity']->data['display']['enquiry'])) ? $form['#entity']->data['display']['enquiry'] : 1,
+    );
+
+    $form['actions']['submit']['#submit'][] = 'tours_form_rooms_unit_edit_form_submit';
+  }
+}
+
+/**
+ *
+ */
+function tours_form_rooms_unit_edit_form_submit($form, &$form_state) {
+  $unit = $form_state['rooms_unit'];
+
+  $unit->data['display'] = $form_state['values']['display'];
+
+  rooms_unit_save($unit);
 }
 
 /**
@@ -1415,22 +1444,16 @@ function tours_availability_reference_potential_references($field, $options = ar
  * List of referenceable nodes defined by content types.
  */
 function _tours_availability_reference_potential_references($field, $options) {
-  // Avoid useless work.
-  if (!isset($field['settings']['referenceable_unit_types'])) {
-    return array();
-  }
-
-  if (!count($field['settings']['referenceable_unit_types'])) {
-    return array();
-  }
-
   $query = db_select('rooms_units', 'u');
   $unit_unit_id_alias = $query->addField('u', 'unit_id');
   $unit_name_alias = $query->addField('u', 'name', 'name');
   $unit_type_alias = $query->addField('u', 'type', 'type');
 
-  if (is_array($field['settings']['referenceable_unit_types'])) {
-    $query->condition('u.type', $field['settings']['referenceable_unit_types'], 'IN');
+  if ($field['type'] == 'multiday_availability_reference') {
+    $query->condition('u.type', TOURS_MULTI_DAY);
+  }
+  else {
+    $query->condition('u.type', TOURS_SINGLE_DAY);
   }
 
   if ($options['string'] !== '') {
@@ -1471,6 +1494,7 @@ function _tours_availability_reference_potential_references($field, $options) {
       'rendered' => check_plain($unit->name),
     );
   }
+
   return $references;
 }
 

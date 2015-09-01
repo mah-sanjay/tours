@@ -17,11 +17,11 @@
       <td class="price"><?php print $booking['price'] ?></td>
 
       <td class="enquire">
-        <?php if ($booking['settings']['enquire_about']): ?>
+        <?php if ($booking['settings']['enquiry']): ?>
           <div class="enquire-about"><a href="/enquiry-tour/<?php print $booking['id']; ?>">Enquire about this Tour</a></div>
         <?php endif; ?>
 
-        <?php if ($booking['settings']['book_now']): ?>
+        <?php if ($booking['settings']['instant_book']): ?>
           <div class="enquire-about"><?php print drupal_render($booking['book_now']); ?></div>
         <?php endif; ?>
       </td>
