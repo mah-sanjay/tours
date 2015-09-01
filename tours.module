@@ -473,6 +473,9 @@ function tours_form_rooms_availability_event_manager_form_alter(&$form, $form_st
   }
 }
 
+/**
+ * "Create Tour" button callback.
+ */
 function tours_add_tour_instance($form, &$form_state) {
   global $user;
 
@@ -493,9 +496,9 @@ function tours_add_tour_instance($form, &$form_state) {
       $states = $rc->getStates($dt, $dt);
       // Taking the most conservative approach for now.
       foreach ($states as $state) {
-        if ($state != ROOMS_AVAILABLE) {
+        if ($state != ROOMS_AVAILABLE && $state != ROOMS_NOT_AVAILABLE) {
           drupal_set_message(t('Could not add booking for event with start date of @start and end date of @end, there was an availability conflict!',
-                         array('@start' => $instance['value'], '@end' => $instance['value2'])), 'warning');
+                         array('@start' => $dt->format('Y-m-d'), '@end' => $dt->format('Y-m-d'))), 'warning');
           continue;
         }
       }
@@ -530,9 +533,9 @@ function tours_add_tour_instance($form, &$form_state) {
     $states = $rc->getStates($start_date, $end_date);
     // Taking the most conservative approach for now.
     foreach ($states as $state) {
-      if ($state != ROOMS_AVAILABLE) {
+      if ($state != ROOMS_AVAILABLE && $state != ROOMS_NOT_AVAILABLE) {
         drupal_set_message(t('Could not add booking for event with start date of @start and end date of @end, there was an availability conflict!',
-                       array('@start' => $instance['value'], '@end' => $instance['value2'])), 'warning');
+                       array('@start' => $start_date->format('Y-m-d'), '@end' => $end_date->format('Y-m-d'))), 'warning');
         return;
       }
     }
@@ -890,7 +893,7 @@ function tours_add_instances_form_submit($form, &$form_state) {
     $states = $rc->getStates($instance['date_start'], $instance['date_end']);
     // Taking the most conservative approach for now.
     foreach ($states as $state) {
-      if ($state != ROOMS_AVAILABLE) {
+      if ($state != ROOMS_AVAILABLE && $state != ROOMS_NOT_AVAILABLE) {
         drupal_set_message(t('Could not add booking for event with start date of @start and end date of @end, there was an availability conflict!',
                        array('@start' => $instance['value'], '@end' => $instance['value2'])), 'warning');
         continue 2;
@@ -1130,7 +1133,7 @@ function tours_rooms_availability_update($response, $events) {
               $responses = $uc->updateCalendar(array($event));
             }
             else {
-              $event = new BookingEvent($unit_id, ROOMS_AVAILABLE, $start_date, $end_date);
+              $event = new BookingEvent($unit_id, ROOMS_NOT_AVAILABLE, $start_date, $end_date);
               $uc = new UnitCalendar($unit_id);
               $responses = $uc->updateCalendar(array($event));
             }
