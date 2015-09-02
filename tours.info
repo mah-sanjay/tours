@@ -40,7 +40,6 @@ features[field_base][] = field_private_daily_slot
 features[field_base][] = field_tour_full_booked
 features[field_base][] = field_tour_orders
 features[field_base][] = field_tour_partially_booked
-features[field_base][] = field_tours_singleday_reference
 features[field_base][] = field_variable_pricing
 features[field_base][] = rooms_booking_unit_options
 features[field_instance][] = rooms_booking-tour_instance-field_tour_full_booked
