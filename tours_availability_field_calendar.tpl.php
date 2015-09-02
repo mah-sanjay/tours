@@ -4,7 +4,7 @@
   <thead>
     <th width="20%">Start Date</th>
     <th width="20%">End Date</th>
-    <th width="20%">Price</th>
+    <th width="20%">Price per person</th>
     <th width="40%"></th>
   </thead>
 

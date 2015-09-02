@@ -561,7 +561,7 @@ function tours_form_rooms_unit_edit_form_alter(&$form, &$form_state, $form_id) {
   $tour_types = tours_get_tour_types(TRUE);
 
   if ($form['#entity']->type == TOURS_SINGLE_DAY) {
-    $form['base_price']['#field_suffix'] = 'per person';
+    $form['base_price']['#field_suffix'] = t('Per person');
 
     $form['field_daily_slot']['und']['#title'] = '';
     $form['field_daily_slot']['und']['actions']['ief_add']['#value'] = t('Add time slot');
@@ -624,6 +624,8 @@ function tours_form_rooms_unit_edit_form_alter(&$form, &$form_state, $form_id) {
   }
 
   if ($form['#entity']->type == TOURS_MULTI_DAY) {
+    $form['base_price']['#field_suffix'] = t('Per person');
+
     $form['display'] = array(
       '#type' => 'fieldset',
       '#group' => 'additional_settings',
@@ -1854,7 +1856,7 @@ function tours_book_now_form($form, &$form_state, $booking) {
     );
 
     $form['group_size'] = array(
-      '#title' => t('Quantity'),
+      '#title' => t('No. of People'),
       '#type' => 'select',
       '#options' => range(1, $free_quantity),
     );
