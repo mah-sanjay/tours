@@ -50,22 +50,24 @@ function tours_allowed_values_page_callback($type, $remitter, $year, $month) {
     $single_day_tour_slots[] = $slot['target_id'];
   }
 
-  $booking_ids = rooms_booking_ids(array('unit_id' => $single_day_tour_slots, 'booking_status' => '0'));
+  $booking_ids = rooms_booking_ids(array('unit_id' => $single_day_tour_slots));
 
   $bookings = rooms_booking_load_multiple(array_keys($booking_ids), array('type' => 'tour_instance'));
 
   $now = new DateTime();
   foreach ($bookings as $booking) {
-    if ($booking->end_date_object > $now) {
-      $start = $booking->start_date_object;
-      $end = $booking->end_date_object;
-      $end = $end->modify('+1 day');
+    if (!$booking->field_tour_full_booked[LANGUAGE_NONE][0]['value']) {
+      if ($booking->end_date_object > $now) {
+        $start = $booking->start_date_object;
+        $end = $booking->end_date_object;
+        $end = $end->modify('+1 day');
 
-      $interval = new DateInterval('P1D');
-      $period = new DatePeriod($start, $interval, $end);
+        $interval = new DateInterval('P1D');
+        $period = new DatePeriod($start, $interval, $end);
 
-      foreach ($period as $dt) {
-        $dates[] = $dt->format('Y-m-d');
+        foreach ($period as $dt) {
+          $dates[] = $dt->format('Y-m-d');
+        }
       }
     }
   }

@@ -1634,17 +1634,18 @@ function tours_single_day_book_form($form, &$form_state, $tour) {
       $single_day_tour_slots[] = $slot['target_id'];
     }
 
-    $results = db_select('rooms_bookings', 'b')
-                ->fields('b', array('unit_id'))
-                ->condition('booking_status', '0')
-                ->condition('unit_id', $single_day_tour_slots)
-                ->condition('start_date', $form_state['values']['date'])
-                ->execute()
-                ->fetchAll();
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'rooms_booking')
+      ->propertyCondition('unit_id', $single_day_tour_slots)
+      ->propertyCondition('start_date', $form_state['values']['date'])
+      ->fieldCondition('field_tour_full_booked', 'value', 0);
+
+    $results = $query->execute();
 
     $available_slots = array();
-    foreach ($results as $result) {
-      $available_slots[] = $result->unit_id;
+    foreach ($results['rooms_booking'] as $booking_id => $result) {
+      $booking = rooms_booking_load($booking_id);
+      $available_slots[] = $booking->unit_id;
     }
 
     foreach ($tour->field_daily_slot[LANGUAGE_NONE] as $id => $slot) {
@@ -1661,17 +1662,18 @@ function tours_single_day_book_form($form, &$form_state, $tour) {
       $single_day_private_tour_slots[] = $slot['target_id'];
     }
 
-    $results = db_select('rooms_bookings', 'b')
-                ->fields('b', array('unit_id'))
-                ->condition('booking_status', '0')
-                ->condition('unit_id', $single_day_private_tour_slots)
-                ->condition('start_date', $form_state['values']['date'])
-                ->execute()
-                ->fetchAll();
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'rooms_booking')
+      ->propertyCondition('unit_id', $single_day_private_tour_slots)
+      ->propertyCondition('start_date', $form_state['values']['date'])
+      ->fieldCondition('field_tour_full_booked', 'value', 0);
+
+    $results = $query->execute();
 
     $available_slots = array();
-    foreach ($results as $result) {
-      $available_slots[] = $result->unit_id;
+    foreach ($results['rooms_booking'] as $booking_id => $result) {
+      $booking = rooms_booking_load($booking_id);
+      $available_slots[] = $booking->unit_id;
     }
 
     foreach ($tour->field_private_daily_slot[LANGUAGE_NONE] as $id => $slot) {
@@ -1703,7 +1705,6 @@ function tours_single_day_book_form($form, &$form_state, $tour) {
 
     $booking_id = db_select('rooms_bookings', 'b')
                   ->fields('b', array('booking_id'))
-                  ->condition('booking_status', '0')
                   ->condition('unit_id', $form_state['values']['time'])
                   ->condition('start_date', $form_state['values']['date'])
                   ->execute()
@@ -1816,7 +1817,6 @@ function tours_single_day_book_form_submit($form, &$form_state) {
 
   $booking_id = db_select('rooms_bookings', 'b')
                   ->fields('b', array('booking_id'))
-                  ->condition('booking_status', '0')
                   ->condition('unit_id', $values['time'])
                   ->condition('start_date', $values['date'])
                   ->execute()
