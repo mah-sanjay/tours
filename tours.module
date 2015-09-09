@@ -1636,25 +1636,27 @@ function tours_single_day_book_form($form, &$form_state, $tour) {
       $single_day_tour_slots[] = $slot['target_id'];
     }
 
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'rooms_booking')
-      ->propertyCondition('unit_id', $single_day_tour_slots)
-      ->propertyCondition('start_date', $form_state['values']['date'])
-      ->fieldCondition('field_tour_full_booked', 'value', 0);
+    if (!empty($single_day_tour_slots)) {
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'rooms_booking')
+        ->propertyCondition('unit_id', $single_day_tour_slots)
+        ->propertyCondition('start_date', $form_state['values']['date'])
+        ->fieldCondition('field_tour_full_booked', 'value', 0);
 
-    $results = $query->execute();
+      $results = $query->execute();
 
-    $available_slots = array();
-    foreach ($results['rooms_booking'] as $booking_id => $result) {
-      $booking = rooms_booking_load($booking_id);
-      $available_slots[] = $booking->unit_id;
-    }
+      $available_slots = array();
+      foreach ($results['rooms_booking'] as $booking_id => $result) {
+        $booking = rooms_booking_load($booking_id);
+        $available_slots[] = $booking->unit_id;
+      }
 
-    foreach ($tour->field_daily_slot[LANGUAGE_NONE] as $id => $slot) {
-      $daily_slot = rooms_unit_load($slot['target_id']);
+      foreach ($tour->field_daily_slot[LANGUAGE_NONE] as $id => $slot) {
+        $daily_slot = rooms_unit_load($slot['target_id']);
 
-      if (in_array($daily_slot->unit_id, $available_slots)) {
-        $time_options[$daily_slot->unit_id] = $daily_slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value_formatted'] . ' - ' . $daily_slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value2_formatted'];
+        if (in_array($daily_slot->unit_id, $available_slots)) {
+          $time_options[$daily_slot->unit_id] = $daily_slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value_formatted'] . ' - ' . $daily_slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value2_formatted'];
+        }
       }
     }
 
@@ -1664,25 +1666,27 @@ function tours_single_day_book_form($form, &$form_state, $tour) {
       $single_day_private_tour_slots[] = $slot['target_id'];
     }
 
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'rooms_booking')
-      ->propertyCondition('unit_id', $single_day_private_tour_slots)
-      ->propertyCondition('start_date', $form_state['values']['date'])
-      ->fieldCondition('field_tour_full_booked', 'value', 0);
+    if (!empty($single_day_private_tour_slots)) {
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'rooms_booking')
+        ->propertyCondition('unit_id', $single_day_private_tour_slots)
+        ->propertyCondition('start_date', $form_state['values']['date'])
+        ->fieldCondition('field_tour_full_booked', 'value', 0);
 
-    $results = $query->execute();
+      $results = $query->execute();
 
-    $available_slots = array();
-    foreach ($results['rooms_booking'] as $booking_id => $result) {
-      $booking = rooms_booking_load($booking_id);
-      $available_slots[] = $booking->unit_id;
-    }
+      $available_slots = array();
+      foreach ($results['rooms_booking'] as $booking_id => $result) {
+        $booking = rooms_booking_load($booking_id);
+        $available_slots[] = $booking->unit_id;
+      }
 
-    foreach ($tour->field_private_daily_slot[LANGUAGE_NONE] as $id => $slot) {
-      $daily_slot = rooms_unit_load($slot['target_id']);
+      foreach ($tour->field_private_daily_slot[LANGUAGE_NONE] as $id => $slot) {
+        $daily_slot = rooms_unit_load($slot['target_id']);
 
-      if (in_array($daily_slot->unit_id, $available_slots)) {
-        $time_options[$daily_slot->unit_id] = $daily_slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value_formatted'] . ' - ' . $daily_slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value2_formatted'] . ' - Private Tour';
+        if (in_array($daily_slot->unit_id, $available_slots)) {
+          $time_options[$daily_slot->unit_id] = $daily_slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value_formatted'] . ' - ' . $daily_slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value2_formatted'] . ' - Private Tour';
+        }
       }
     }
 
