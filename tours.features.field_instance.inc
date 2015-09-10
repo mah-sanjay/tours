@@ -188,7 +188,7 @@ function tours_field_default_field_instances() {
         'size' => 60,
       ),
       'type' => 'entityreference_autocomplete',
-      'weight' => 2,
+      'weight' => 3,
     ),
   );
 
@@ -247,7 +247,42 @@ function tours_field_default_field_instances() {
         'label_position' => 'above',
       ),
       'type' => 'timefield_standard',
-      'weight' => 1,
+      'weight' => 2,
+    ),
+  );
+
+  // Exported field_instance:
+  // 'rooms_unit-private_single_day_tour_slot-field_private_tour_title'
+  $field_instances['rooms_unit-private_single_day_tour_slot-field_private_tour_title'] = array(
+    'bundle' => 'private_single_day_tour_slot',
+    'default_value' => NULL,
+    'deleted' => 0,
+    'description' => 'If this tour has one price, regardless of number of people booking, add a description here, this will replace the times in the booking widget. For example, half day and full day options will be created as two private tour time slots, with Tour Titles of "Half-Day" and "Full-day" respectively.',
+    'display' => array(
+      'default' => array(
+        'label' => 'above',
+        'module' => 'text',
+        'settings' => array(),
+        'type' => 'text_default',
+        'weight' => 4,
+      ),
+    ),
+    'entity_type' => 'rooms_unit',
+    'field_name' => 'field_private_tour_title',
+    'label' => 'Tour Title',
+    'required' => 0,
+    'settings' => array(
+      'text_processing' => 0,
+      'user_register_form' => FALSE,
+    ),
+    'widget' => array(
+      'active' => 1,
+      'module' => 'text',
+      'settings' => array(
+        'size' => 60,
+      ),
+      'type' => 'text_textfield',
+      'weight' => 0,
     ),
   );
 
@@ -317,7 +352,7 @@ function tours_field_default_field_instances() {
         ),
       ),
       'type' => 'textfield_&_textfield',
-      'weight' => 3,
+      'weight' => 4,
     ),
   );
 
@@ -348,7 +383,7 @@ function tours_field_default_field_instances() {
       'module' => 'rooms',
       'settings' => array(),
       'type' => 'rooms_options_combined',
-      'weight' => 0,
+      'weight' => 1,
     ),
   );
 
@@ -634,10 +669,12 @@ function tours_field_default_field_instances() {
   t('Day Tour');
   t('Day Tour Time Slot');
   t('Full booked');
+  t('If this tour has one price, regardless of number of people booking, add a description here, this will replace the times in the booking widget. For example, half day and full day options will be created as two private tour time slots, with Tour Titles of "Half-Day" and "Full-day" respectively.');
   t('Options');
   t('Partially booked');
   t('Private Daily Slot');
   t('Tour Orders');
+  t('Tour Title');
   t('Variable Pricing');
 
   return $field_instances;

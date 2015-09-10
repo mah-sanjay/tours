@@ -1682,10 +1682,17 @@ function tours_single_day_book_form($form, &$form_state, $tour) {
       }
 
       foreach ($tour->field_private_daily_slot[LANGUAGE_NONE] as $id => $slot) {
-        $daily_slot = rooms_unit_load($slot['target_id']);
+        $private_daily_slot = rooms_unit_load($slot['target_id']);
 
-        if (in_array($daily_slot->unit_id, $available_slots)) {
-          $time_options[$daily_slot->unit_id] = $daily_slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value_formatted'] . ' - ' . $daily_slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value2_formatted'] . ' - Private Tour';
+        if (in_array($private_daily_slot->unit_id, $available_slots)) {
+          $time_options[$daily_slot->unit_id] = $private_daily_slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value_formatted'] . ' - ' . $daily_slot->field_day_tour_time_slot[LANGUAGE_NONE][0]['value2_formatted'] . ' - Private Tour';
+
+          // Replace times with Tour title field
+          if (isset($private_daily_slot->field_private_tour_title[LANGUAGE_NONE][0]['value'])) {
+            if ($private_daily_slot->field_private_tour_title[LANGUAGE_NONE][0]['value'] != '') {
+              $time_options[$daily_slot->unit_id] = $private_daily_slot->field_private_tour_title[LANGUAGE_NONE][0]['value'] . ' - Private Tour';
+            }            
+          }
         }
       }
     }
