@@ -742,6 +742,9 @@ function tours_form_update_availability_calendar_form_alter(&$form, &$form_state
     );
   }
   elseif ($unit->type == TOURS_MULTI_DAY) {
+    $form['rooms_update_availability']['#title'] = t('Create bookable Tour');
+    $form['rooms_update_availability']['#collapsed'] = FALSE;
+
     $form['rooms_update_availability']['actions']['submit']['#value'] = t('Add Instances');
     $form['rooms_update_availability']['actions']['submit']['#submit'][0] = 'tours_add_instances_form_submit';
     $form['rooms_update_availability']['#description'] = t('Enter tour dates/times.');
