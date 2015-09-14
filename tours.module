@@ -2111,7 +2111,7 @@ function tours_single_day_slot_manage_availability($form, &$form_state) {
 function tours_menu_local_tasks_alter(&$data, $router_item, $root_path) {
   if ($root_path == 'admin/rooms/units/unit/%/availability' || $root_path == 'admin/rooms/units/unit/%/pricing') {
     if (isset($router_item['page_arguments'][0]->type)) {
-      if ($router_item['page_arguments'][0]->type == TOURS_SINGLE_DAY_SLOT) {
+      if ($router_item['page_arguments'][0]->type == TOURS_SINGLE_DAY_SLOT || $router_item['page_arguments'][0]->type == TOURS_PRIVATE_SINGLE_DAY_SLOT) {
         $tour_slot = rooms_unit_load(arg(4));
         $day_tour = $tour_slot->field_day_tour['und'][0]['target_id'];
 
