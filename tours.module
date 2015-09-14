@@ -1737,7 +1737,7 @@ function tours_single_day_book_form($form, &$form_state, $tour) {
 
   $form['container']['price'] = array(
     '#type' => 'markup',
-    '#markup' => '<div></div>',
+    '#markup' => '<div class="form-item form-item-price"></div>',
   );
 
   $form['container']['submit'] = array(
@@ -1805,7 +1805,7 @@ function tours_single_day_book_form($form, &$form_state, $tour) {
       ));
     }
 
-    $form['container']['price']['#markup'] = '<div class="form-item form-group">' . t('Price') . ': ' . $price . '</div>';
+    $form['container']['price']['#markup'] = '<div class="form-item form-item-price">' . t('Price') . ': ' . $price . '</div>';
   }
 
   return $form;
