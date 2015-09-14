@@ -1805,7 +1805,7 @@ function tours_single_day_book_form($form, &$form_state, $tour) {
       ));
     }
 
-    $form['container']['price']['#markup'] = '<div class="form-item form-item-price">' . t('Price') . ': ' . $price . '</div>';
+    $form['container']['price']['#markup'] = '<div class="form-item form-item-price"><div class="field__label">' . t('Price') . ': </div><div class="field__item">' . $price . '</div></div>';
   }
 
   return $form;
