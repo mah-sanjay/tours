@@ -421,13 +421,90 @@ function tours_form_rooms_availability_event_manager_form_alter(&$form, $form_st
   $unit = rooms_unit_load($form['unit_id']['#value']);
   $tour_types = tours_get_tour_types(TRUE);
 
-  if (in_array($unit->type, $tour_types)) {
+  if ($unit->type == TOURS_SINGLE_DAY) {
+    if (isset($form['change_event_status'])) {
+      unset($form['change_event_status']);
+    }
+    if (isset($form['order'])) {
+      unset($form['order']);
+    }
+    if (isset($form['event_details'])) {
+      unset($form['event_details']);
+    }
+
+    $start_date = clone($form['rooms_start_date']['#value']);
+    $end_date = clone($form['rooms_end_date']['#value']);
+    $start_date->sub(new DateInterval('P1D'));
+
+    $tour = rooms_unit_load($form['unit_id']['#value']);
+
+    $bookings_array = array();
+    $booking_ids_array = array();
+
+    foreach ($tour->field_daily_slot[LANGUAGE_NONE] as $slot) {
+      $booking_ids = rooms_booking_ids(array('unit_id' => $slot['target_id']));
+      $bookings = rooms_booking_load_multiple(array_keys($booking_ids), array('type' => 'tour_instance'));
+
+      foreach ($bookings as $booking) {
+        if (!$booking->field_tour_full_booked[LANGUAGE_NONE][0]['value'] && !$booking->field_tour_partially_booked[LANGUAGE_NONE][0]['value']) {
+          if ($booking->start_date_object >= $start_date && $booking->end_date_object <= $end_date) {
+            $bookings_array[$booking->booking_id] = $booking;
+            $booking_ids_array[$booking->booking_id] = $booking->booking_id;
+          }
+        }
+      }
+    }
+
+    foreach ($tour->field_private_daily_slot[LANGUAGE_NONE] as $slot) {
+      $booking_ids = rooms_booking_ids(array('unit_id' => $slot['target_id']));
+      $bookings = rooms_booking_load_multiple(array_keys($booking_ids), array('type' => 'tour_instance'));
+
+      foreach ($bookings as $booking) {
+        if (!$booking->field_tour_full_booked[LANGUAGE_NONE][0]['value'] && !$booking->field_tour_partially_booked[LANGUAGE_NONE][0]['value']) {
+          if ($booking->start_date_object >= $start_date && $booking->end_date_object <= $end_date) {
+            $bookings_array[$booking->booking_id] = $booking;
+            $booking_ids_array[$booking->booking_id] = $booking->booking_id;
+          }
+        }
+      }
+    }
+
+    if (empty($booking_ids_array)) {
+      $form['description'] = array(
+        '#markup' => '<p>' . t('No bookings to delete.') . '</p>',
+      );
+    }
+    else {
+      $form['description'] = array(
+        '#markup' => '<p>' . t('Are you sure you want to cancel all availability from @start_date to @end_date? This operation is irreversible.', array('@start_date' => $form['rooms_start_date']['#value']->format('d-m-Y'), '@end_date' => $form['rooms_end_date']['#value']->format('d-m-Y'))) . '</p>',
+      );
+
+      $form['submit'] = array(
+        '#type' => 'submit',
+        '#value' => 'Cancel all tour availability',
+        '#submit' => array('tours_cancel_tour_availability'),
+      );
+
+      $form['booking_ids'] = array(
+        '#type' => 'hidden',
+        '#value' => $booking_ids_array,
+      );
+    }
+
+    if ($form_state['submitted']) {
+      $commands[] = ctools_modal_command_dismiss();
+
+      print ajax_render($commands);
+      exit;
+    }
+  }
+  elseif (in_array($unit->type, $tour_types)) {
     if (isset($form['order'])) {
       unset($form['order']);
 
       $form['submit'] = array(
         '#type' => 'submit',
-        '#value' => 'Create Tour',
+        '#value' => t('Create Tour'),
         '#submit' => array('tours_add_tour_instance'),
       );
 
@@ -445,6 +522,15 @@ function tours_form_rooms_availability_event_manager_form_alter(&$form, $form_st
       unset($form['order']['order_link']['tour_instance']);
     }
   }
+}
+
+/**
+ * "Cancel all tour availability" button callback.
+ */
+function tours_cancel_tour_availability($form, &$form_state) {
+  rooms_booking_delete_multiple($form_state['values']['booking_ids']);
+
+  $form_state['rebuild'] = TRUE;
 }
 
 /**
@@ -1317,10 +1403,15 @@ function tours_availability_page(RoomsUnit $rooms_unit, $year = '', $month = '')
       $js_file = drupal_get_path('module', 'rooms_availability') . '/js/rooms_availability_full_day.js';
     }
 
+    $form = array();
+    $form['description'] = array(
+      '#markup' => t('Use this calendar to cancel all availability for this tour on the selected dates. Time slots with existing bookings will remain, but any unbooked tour time slots will be canceled.'),
+    );
+
     return array(
       '#theme' => 'rooms_three_month_calendar',
       '#url' => $url,
-      '#form' => ($rooms_unit->type == TOURS_SINGLE_DAY) ? array() : drupal_get_form('update_availability_calendar_form', $rooms_unit->unit_id, $year, $month),
+      '#form' => ($rooms_unit->type == TOURS_SINGLE_DAY) ? $form : drupal_get_form('update_availability_calendar_form', $rooms_unit->unit_id, $year, $month),
       '#year' => $year,
       '#month' => $month,
       '#attached' => array(

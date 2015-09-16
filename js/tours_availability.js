@@ -70,7 +70,7 @@ Drupal.behaviors.rooms_availability = {
           $(value[0]).fullCalendar('refetchEvents');
         },
         events: Drupal.settings.basePath + '?q=rooms/units/unit/' + Drupal.settings.roomsAvailability.roomID + '/availability/json/' + value[2] + '/' + phpmonth,
-        /*eventClick: function(calEvent, jsEvent, view) {
+        eventClick: function(calEvent, jsEvent, view) {
           // Getting the Unix timestamp - JS will only give us milliseconds
           if (calEvent.end === null) {
             //We are probably dealing with a single day event
@@ -89,7 +89,7 @@ Drupal.behaviors.rooms_availability = {
           // Open the modal for edit
           Drupal.RoomsAvailability.Modal(this, -2, sd, ed);
           $(value[0]).fullCalendar('unselect');
-        },*/
+        },
         eventRender: function(event, el) {
           if (this.id > 3) {
             el.find('.fc-title').text('T P');
