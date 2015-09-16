@@ -476,7 +476,7 @@ function tours_form_rooms_availability_event_manager_form_alter(&$form, $form_st
     }
     else {
       $form['description'] = array(
-        '#markup' => '<p>' . t('Are you sure you want to cancel all availability from @start_date to @end_date? This operation is irreversible.', array('@start_date' => $form['rooms_start_date']['#value']->format('d-m-Y'), '@end_date' => $form['rooms_end_date']['#value']->format('d-m-Y'))) . '</p>',
+        '#markup' => '<p>' . t('Are you sure you want to cancel all availability from @start_date to @end_date? This operation is irreversible.', array('@start_date' => $form['rooms_start_date']['#value']->format('d-m-Y'), '@end_date' => $form['rooms_end_date']['#value']->format('d-m-Y'))) . '</p><p>' . t('Any tours with existing bookings will not be cancelled.') . '</p>',
       );
 
       $form['submit'] = array(
