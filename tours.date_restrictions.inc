@@ -14,6 +14,13 @@ function tours_date_restrictions_allowed_values_info() {
 }
 
 /**
+ * Implements allowed_values_valid_date callback.
+ */
+function tours_allowed_values_valid_date($date, $type, $settings, $element, $form_state, $form) {
+  return TRUE;
+}
+
+/**
  * Implements allowed_values_remitter_pack callback.
  */
 function tours_allowed_values_remitter_pack($type, $element, $form_state, $context) {
