@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gambling Awareness & Support Tool</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Gambling Support">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚫 Gambling Awareness & Support Tool</h1>
+            <p>Stay strong and focused on your goals</p>
+        </header>
+
+        <main>
+            <section class="commitment-tracker">
+                <h2>Your Commitment Tracker</h2>
+                <div class="tracker-card">
+                    <div class="streak-counter">
+                        <span class="streak-number" id="streakCount">0</span>
+                        <span class="streak-label">Days Strong</span>
+                    </div>
+                    <button class="check-in-btn" onclick="checkIn()">✅ Today's Check-in</button>
+                </div>
+            </section>
+
+            <section class="content-filter">
+                <h2>Content Filter Helper</h2>
+                <div class="filter-tools">
+                    <div class="url-checker">
+                        <h3>Check if a website is gambling-related</h3>
+                        <input type="url" id="urlInput" placeholder="Enter website URL to check">
+                        <button onclick="checkURL()">Check URL</button>
+                        <div id="urlResult" class="result"></div>
+                    </div>
+                    
+                    <div class="keyword-checker">
+                        <h3>Check text for gambling keywords</h3>
+                        <textarea id="textInput" placeholder="Paste text to check for gambling-related content"></textarea>
+                        <button onclick="checkText()">Check Text</button>
+                        <div id="textResult" class="result"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="support-resources">
+                <h2>Support & Resources</h2>
+                <div class="resources-grid">
+                    <div class="resource-card">
+                        <h3>🆘 Immediate Help</h3>
+                        <p>National Problem Gambling Helpline</p>
+                        <a href="tel:1-800-522-4700" class="resource-link">1-800-522-4700</a>
+                    </div>
+                    <div class="resource-card">
+                        <h3>💬 Online Support</h3>
+                        <p>Gamblers Anonymous</p>
+                        <a href="https://www.gamblersanonymous.org" target="_blank" class="resource-link">Visit Website</a>
+                    </div>
+                    <div class="resource-card">
+                        <h3>📱 Mobile Apps</h3>
+                        <p>Recovery-focused apps</p>
+                        <ul>
+                            <li>I Am Sober</li>
+                            <li>Recovery Path</li>
+                            <li>Nomo</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section class="motivation">
+                <h2>Daily Motivation</h2>
+                <div class="motivation-card">
+                    <p id="motivationText">Every day you stay strong is a victory. You're building a better future for yourself.</p>
+                    <button onclick="newMotivation()">💪 New Motivation</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
