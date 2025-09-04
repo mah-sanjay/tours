@@ -1,0 +1,34 @@
+{
+  "name": "gambling-awareness-support-tool",
+  "version": "1.0.0",
+  "description": "A web-based application designed to help individuals stay strong in their commitment to avoid gambling and betting activities",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "serve": "npx http-server -p 8000",
+    "dev": "npx live-server --port=8000"
+  },
+  "keywords": [
+    "gambling",
+    "addiction",
+    "recovery",
+    "support",
+    "wellness",
+    "mental-health",
+    "self-help"
+  ],
+  "author": "Support Tool Creator",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "live-server": "^1.2.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/gambling-awareness-support-tool.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/gambling-awareness-support-tool/issues"
+  },
+  "homepage": "https://github.com/yourusername/gambling-awareness-support-tool#readme"
+}
