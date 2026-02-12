@@ -1,0 +1,17 @@
+Rank,Suburb,Region,Distance_to_CBD_km,Median_House_Price,Min_Price,Max_Price,Rental_Yield_%,Weekly_Rent_Low,Weekly_Rent_High,Growth_Forecast_5yr_%,Annual_Growth_%,Population_Growth_%,Unemployment_%,Median_Age,Family_Households_%,Infrastructure_Score_10,Amenities_Score_10,Schools_Score_10,Transport_Score_10,Key_Infrastructure_Project,Project_Timeline,Employment_Hub_Nearby,Investment_Strategy,Risk_Level
+1,Melton South,West,38,580000,550000,600000,4.8,450,480,40-50,8-10,3.8,5.2,32,72,9,7,7,8,Airport Rail Link,2029,Toolern Town Centre,Growth + Yield,Medium
+2,Officer,South East,52,650000,620000,680000,4.5,550,580,35-45,7-9,4.2,4.8,33,75,8,8,8,9,Officer Town Centre,2026-2028,Berwick/Dandenong,Capital Growth,Medium
+3,Cranbourne East,South East,46,620000,600000,650000,4.6,520,550,35-42,7-8.5,3.5,5.1,34,76,8,8,9,8,Casey Fields Sports Precinct,Ongoing,Dandenong,Balanced,Low-Medium
+4,Werribee,West,32,580000,550000,600000,4.7,480,510,32-40,6-8,3.2,4.9,33,68,9,9,8,9,Werribee Town Centre Upgrade,2025-2027,Werribee CBD,Income Focused,Low
+5,Pakenham,South East,53,600000,580000,630000,4.6,520,550,33-40,6.5-8,3.9,5.3,34,74,8,7,7,8,Train Line Duplication,Completed,Officer,Balanced,Medium
+6,Craigieburn,North,28,620000,600000,650000,4.5,520,550,30-38,6-7.5,2.8,5.0,35,73,8,8,8,9,Hume Highway Upgrade,2026-2028,Broadmeadows,Conservative,Low
+7,Sunbury,North West,40,650000,620000,680000,4.2,500,530,28-35,5.5-7,2.2,4.5,37,71,7,9,9,8,Town Centre Revitalization,2025-2026,Sunbury CBD,Conservative,Low
+8,Tarneit,West,32,590000,570000,620000,4.7,500,530,35-42,7-8.5,4.5,5.4,31,77,8,7,7,8,Town Centre Development,2026-2029,Werribee,Growth,Medium
+9,Clyde North,South East,50,640000,620000,670000,4.4,530,560,33-40,6.5-8,4.0,5.0,32,78,9,8,9,7,Suburban Rail Loop (Future),2040s,Officer/Berwick,Long-term Growth,Medium-High
+10,Wyndham Vale,West,36,580000,560000,600000,4.8,500,530,32-38,6.5-7.5,3.6,5.3,33,74,7,7,7,8,Regional Rail Improvements,2026-2027,Werribee,Income Focused,Medium
+
+Market_Context,,,,,,,,,,,,,,,,,,,,,,,
+Melbourne_Median,All,0,1000000,,,,,,,3-6,,,4.2,36,65,,,,,,,Varied,Low-High
+Victoria_Regional_Median,Regional,80+,550000,,,,,,,5-8,,,4.5,38,68,,,,,,,Varied,Medium
+Interest_Rate_Current,,,,,,,,,,,3.25-3.50%,,,,,,,,,,,,
+Rental_Vacancy_Rate,,,,,,,,,,,1.2-1.8%,,,,,,,,,,,,
